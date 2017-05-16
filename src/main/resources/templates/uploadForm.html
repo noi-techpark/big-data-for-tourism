@@ -1,0 +1,18 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<h1>Tourism data collector (beta)</h1>
+
+	<div th:if="${message}">
+		<h2 th:text="${message}"/>
+	</div>
+
+	<form method="POST" enctype="multipart/form-data" action="">
+		<table>
+			<tr><td>File to upload:</td><td><input type="file" name="file" /></td></tr>
+			<tr><td colspan="2"><input type="submit" value="Upload" /></td></tr>
+		</table>
+	</form>
+
+</body>
+</html>
