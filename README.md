@@ -1,6 +1,6 @@
 # Tourism data collector
 
-A Elasticsearch CSV importer written in Java 1.8 using Maven for the build.
+An Elasticsearch CSV importer written in Java 1.8 using Maven for the build.
 
 ## Features
 
