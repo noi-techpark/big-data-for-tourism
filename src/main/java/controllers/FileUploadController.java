@@ -12,6 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.util.Scanner;
+import java.util.regex.MatchResult;
 import java.util.stream.Collectors;
 
 import converter.EnquiryDataConverter;
@@ -141,6 +143,22 @@ public class FileUploadController {
                 line = reader.readLine();
             } catch (IOException e) {
                 log.error("failing to read line");
+            }
+            try {
+                Scanner scan = new Scanner(line);
+                scan.findInLine(",");
+                MatchResult match = scan.match();
+                match.groupCount();
+            } catch(IllegalStateException e) {
+                log.info("delimiter ',' not found, trying with ';'");
+
+                Options options2 = new Options('"', '\\', ';');
+
+                RFC4180Tokenizer tokenizer2 = new RFC4180Tokenizer(options2);
+
+                CsvParserOptions options32 = new CsvParserOptions(false, tokenizer2);
+
+                parser3 = new CsvParser<>(options32, mapping3);
             }
             int lines = 1;
             int errors = 0;
