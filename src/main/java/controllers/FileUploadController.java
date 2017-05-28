@@ -162,6 +162,7 @@ public class FileUploadController {
             }
             int lines = 1;
             int errors = 0;
+            int maxErrors = 30;
 
             while(line != null) {
                 List<CsvMappingResult<EnquiryData>> result3 = parser3.readFromString(line, new CsvReaderOptions(lineSeparator)).collect(Collectors.toList());
@@ -208,6 +209,15 @@ public class FileUploadController {
                     log.error("failing to read line");
                 }
                 lines++;
+
+                if(errors >= maxErrors) { // display only the first x errors
+                    String message = "more than " + maxErrors + " errors cannot be viewed at once";
+
+                    list.add(message);
+                    log.info(message);
+
+                    break;
+                }
             }
 
             if(errors == 0) {
