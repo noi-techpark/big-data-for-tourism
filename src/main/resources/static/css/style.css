@@ -1,0 +1,124 @@
+html {
+    font-size: 1.375em;
+}
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 1.455;
+    text-align: center;
+    color: #6f6f6e;
+    margin: 0;
+    padding: 0;
+}
+a {
+    color: #bfcc00;
+    text-decoration: underline;
+}
+ul {
+    text-align: left;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+h1 {
+    display: inline-block;
+    border-bottom: 4px solid #bfcc00;
+    font-size: 2.22727rem;
+    line-height: 1.307;
+    color: #3c3d3c;
+    margin-top: 64px;
+    margin-bottom: 2.90909rem;
+}
+.page-content {
+    padding-left: 4rem;
+    padding-right: 4rem;
+}
+small {
+    font-size: .81818rem;
+    line-height: 1.778;
+}
+pre {
+    padding: 16px;
+    overflow: auto;
+    font-size: .7rem;
+    background-color: #f6f8fa;
+    word-wrap: normal;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    margin: 0;
+}
+.button {
+    line-height: 3.445;
+    padding: 0 4.4em;
+    font-size: .81818rem;
+    width: 230px;
+    color: #fff;
+    background-color: #587825;
+    border-color: #587825;
+    display: inline-block;
+    white-space: nowrap;
+    vertical-align: top;
+    cursor: pointer;
+    background-image: none;
+    border: 0;
+    text-transform: uppercase;
+    text-decoration: none;
+    float: left;
+    margin-left: 12px;
+}
+body {
+    padding-bottom: 64px;
+}
+
+.custom-file-upload-container {
+    width: 822px;
+    margin: 0 auto;
+}
+.custom-file-upload-hidden {
+    display: none;
+    visibility: hidden;
+    position: absolute;
+    left: -9999px;
+}
+.custom-file-upload {
+    display: block;
+    width: auto;
+}
+.file-upload-wrapper {
+    position: relative;
+}
+.file-upload-input {
+    line-height: 3.445;
+    padding: 0 4.4em;
+    font-size: .81818rem;
+    width: 300px;
+    color: #fff;
+    border: none;
+    background-color: #6f6f6e;
+    -moz-transition: all 0.2s ease-in;
+    -o-transition: all 0.2s ease-in;
+    -webkit-transition: all 0.2s ease-in;
+    transition: all 0.2s ease-in;
+    float: left;
+    text-align: center;
+    /* IE 9 Fix */
+}
+.file-upload-button {
+    line-height: 3.445;
+    padding: 0 4.4em;
+    font-size: .81818rem;
+    width: 280px;
+    cursor: pointer;
+    display: inline-block;
+    color: #fff;
+    text-transform: uppercase;
+    border: none;
+    margin-left: -1px;
+    background-color: #3c3d3c;
+    float: left;
+    /* IE 9 Fix */
+    -moz-transition: all 0.2s ease-in;
+    -o-transition: all 0.2s ease-in;
+    -webkit-transition: all 0.2s ease-in;
+    transition: all 0.2s ease-in;
+}
+.file-upload-button:hover {
+    background-color: #2f302f;
+}

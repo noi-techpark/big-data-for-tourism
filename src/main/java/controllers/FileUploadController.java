@@ -109,6 +109,8 @@ public class FileUploadController {
                 .put("xpack.security.user", user)
                 .build();
 
+        int errors = 0;
+
         try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
 
             String endpoint = env.getProperty("es.endpoint");
@@ -161,7 +163,6 @@ public class FileUploadController {
                 parser3 = new CsvParser<>(options32, mapping3);
             }
             int lines = 1;
-            int errors = 0;
             int maxErrors = 30;
 
             while(line != null) {
@@ -195,7 +196,11 @@ public class FileUploadController {
                         throw new Exception("the difference between submittedOn '" + result.getSubmittedOn() + "' and arrival '" + result.getArrival() + "' (" + months2 + " months) is greater than 18 months");
                     }
                 } catch(Exception e) {
-                    String message = "line " + lines + ": " + e.getMessage();
+                    String msg = e.getMessage();
+                    if(null == msg) {
+                        msg = "conversion failed";
+                    }
+                    String message = "Line " + lines + ": " + msg;
 
                     list.add(message);
                     log.warn(message);
@@ -261,7 +266,25 @@ public class FileUploadController {
             }
         }
 
-        redirectAttributes.addFlashAttribute("message", list.toString());
+        String result = "";
+        if(errors == 0) {
+            result = "<h1>Congratulations! Your data has been stored</h1>";
+            result += "<div>";
+            result += "Now you can sit back and enjoy a coffee";
+            result += "</div>";
+        } else {
+            result = "<h1>Oops! Your data has NOT been stored</h1>";
+            result += "<div>";
+            result += "One or more errors occurred while parsing your data. Please correct and reupload your file:<br/><br/>";
+            result += "<ul>";
+            for (String item : list) {
+                result += "<li><small>" + item + "</small></li>";
+            }
+            result += "</ul>";
+            result += "</div>";
+        }
+
+        redirectAttributes.addFlashAttribute("message", result);
 
         return "redirect:/";
     }
