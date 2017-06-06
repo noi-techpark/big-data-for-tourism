@@ -2,6 +2,9 @@ package controllers;
 
 import controllers.storage.StorageFileNotFoundException;
 import controllers.storage.StorageService;
+import org.elasticsearch.action.bulk.byscroll.BulkByScrollResponse;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.UUID;
 import java.util.regex.MatchResult;
 import java.util.stream.Collectors;
 
@@ -59,6 +63,49 @@ public class FileUploadController {
         this.storageService = storageService;
     }
 
+    @GetMapping("/delete/{uniqueKey:.+}")
+    public String deleteUploadedFiles(@PathVariable String uniqueKey) throws IOException {
+        String indexName = env.getProperty("es.index");
+
+        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
+        String cluster = env.getProperty("es.cluster");
+        String user = env.getProperty("es.user");
+
+        Settings settings = Settings.builder()
+                .put("client.transport.nodes_sampler_interval", "5s")
+                .put("client.transport.sniff", false)
+                .put("transport.tcp.compress", true)
+                .put("cluster.name", cluster)
+                .put("xpack.security.transport.ssl.enabled", enableSsl)
+                .put("request.headers.X-Found-Cluster", cluster)
+                .put("xpack.security.user", user)
+                .build();
+
+        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
+            String endpoint = env.getProperty("es.endpoint");
+            int port = Integer.parseInt(env.getProperty("es.port"));
+
+            try {
+                transportClient
+                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
+            } catch (Exception e) {
+                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
+            }
+
+            BulkByScrollResponse response =
+                    DeleteByQueryAction.INSTANCE.newRequestBuilder(transportClient)
+                            .filter(QueryBuilders.matchQuery("unique_key", uniqueKey))
+                            .source(indexName)
+                            .get();
+
+            long deleted = response.getDeleted();
+
+            log.info("number of deleted documents: " + deleted);
+        }
+
+        return "deleteDataset";
+    }
+
     @GetMapping("/")
     public String listUploadedFiles(Model model) throws IOException { return "uploadForm"; }
 
@@ -79,6 +126,8 @@ public class FileUploadController {
         CsvParser<EnquiryData> parser3 = new CsvParser<>(options3, mapping3);
 
         List<String> list = new ArrayList<String>();
+
+        String uniqueKey = "";
 
         try {
             Preloader.loadCountries();
@@ -226,6 +275,8 @@ public class FileUploadController {
             }
 
             if(errors == 0) {
+                uniqueKey = UUID.randomUUID().toString();
+
                 String message = "your data has been stored";
 
                 list.add(message);
@@ -239,7 +290,7 @@ public class FileUploadController {
                     while(line != null) {
                         List<CsvMappingResult<EnquiryData>> result3 = parser3.readFromString(line, new CsvReaderOptions(lineSeparator)).collect(Collectors.toList());
 
-                        client.index(EnquiryDataConverter.convert(result3.get(0).getResult()));
+                        client.index(EnquiryDataConverter.convert(result3.get(0).getResult(), uniqueKey));
 
                         line = reader2.readLine();
                     }
@@ -270,7 +321,7 @@ public class FileUploadController {
         if(errors == 0) {
             result = "<h1>Congratulations! Your data has been stored</h1>";
             result += "<div>";
-            result += "Now you can sit back and enjoy a coffee";
+            result += "Now you can sit back and enjoy a coffee. Please record your dataset ID: " + uniqueKey;
             result += "</div>";
         } else {
             result = "<h1>Oops! Your data has NOT been stored</h1>";

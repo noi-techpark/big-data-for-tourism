@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter;
 
 public class EnquiryDataConverter {
 
-    public static Enquiry convert(EnquiryData csvEnquiryData) {
+    public static Enquiry convert(EnquiryData csvEnquiryData, String uniqueKey) {
 
         Enquiry enquiry = new Enquiry();
 
@@ -22,6 +22,7 @@ public class EnquiryDataConverter {
         enquiry.cancellation = csvEnquiryData.getCancellation();
         enquiry.submittedOn = csvEnquiryData.getSubmittedOn().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         enquiry.lengthOfStay = csvEnquiryData.getLengthOfStay();
+        enquiry.uniqueKey = uniqueKey;
 
         return enquiry;
     }

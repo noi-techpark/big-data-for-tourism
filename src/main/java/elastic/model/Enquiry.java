@@ -37,5 +37,8 @@ public class Enquiry {
     @JsonProperty("length_of_stay")
     public long lengthOfStay;
 
+    @JsonProperty("unique_key")
+    public String uniqueKey;
+
 }
 
