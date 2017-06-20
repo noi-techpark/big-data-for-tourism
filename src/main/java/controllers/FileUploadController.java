@@ -3,8 +3,10 @@ package controllers;
 import controllers.storage.StorageFileNotFoundException;
 import controllers.storage.StorageService;
 import org.elasticsearch.action.bulk.byscroll.BulkByScrollResponse;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -247,6 +249,13 @@ public class FileUploadController {
                     long months2 = ChronoUnit.MONTHS.between(result.getSubmittedOn().toLocalDate(), result.getArrival()); // https://www.leveluplunch.com/java/examples/number-of-months-between-two-dates/
                     if(months2 > 18) {
                         throw new Exception("the difference between submittedOn '" + result.getSubmittedOn() + "' and arrival '" + result.getArrival() + "' (" + months2 + " months) is greater than 18 months");
+                    }
+                    String hashCode = result.getHash();
+                    SearchResponse response = transportClient.prepareSearch(indexName)
+                            .setSource(new SearchSourceBuilder().size(0).query(QueryBuilders.termQuery("hash_code", hashCode)))
+                            .get();
+                    if(response.getHits().getTotalHits() > 0) {
+                        throw new Exception("hashCode '" + hashCode + "' does already exist");
                     }
                 } catch(Exception e) {
                     String msg = e.getMessage();
