@@ -24,15 +24,9 @@ public class MyLocalDateTimeConverter implements ITypeConverter<LocalDateTime> {
         try {
             dt = LocalDateTime.parse(value, dateTimeFormatter); // 2011-12-03T10:15:30
         } catch(DateTimeParseException e) {
-            try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"); // 2011-12-03 10:15:30
-                this.dateTimeFormatter = formatter;
-                dt = LocalDateTime.parse(value, dateTimeFormatter);
-            } catch(DateTimeParseException e2) {
-                value += "T00:00:00"; // 2011-12-03 -> 2011-12-03T00:00:00
-                this.dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-                dt = LocalDateTime.parse(value, dateTimeFormatter);
-            }
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"); // 2011-12-03 10:15:30
+            this.dateTimeFormatter = formatter;
+            dt = LocalDateTime.parse(value, dateTimeFormatter);
         }
         return dt;
     }
