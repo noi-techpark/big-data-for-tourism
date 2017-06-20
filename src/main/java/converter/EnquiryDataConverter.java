@@ -23,6 +23,7 @@ public class EnquiryDataConverter {
         enquiry.submittedOn = csvEnquiryData.getSubmittedOn().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         enquiry.lengthOfStay = csvEnquiryData.getLengthOfStay();
         enquiry.uniqueKey = uniqueKey;
+        enquiry.hashCode = csvEnquiryData.getHash();
 
         return enquiry;
     }

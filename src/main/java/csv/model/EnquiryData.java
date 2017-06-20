@@ -6,6 +6,9 @@ import elastic.model.GeoLocation;
 import elastic.model.Location;
 import controllers.Preloader;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -154,5 +157,15 @@ public class EnquiryData {
     }
 
     public void setLengthOfStay(long lengthOfStay) { this.lengthOfStay = lengthOfStay; }
+
+    public String getHash() {
+        String s = getSubmittedOn().toString().concat(getArrival().toString()).concat(getDeparture().toString()).concat(getAdults().toString()).concat(getCountry().toString());
+        MessageDigest m = null;
+        try {
+            m = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) { }
+        m.update(s.getBytes(),0,s.length());
+        return new BigInteger(1,m.digest()).toString(16);
+    }
 }
 

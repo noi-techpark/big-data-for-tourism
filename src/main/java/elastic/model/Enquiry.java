@@ -40,5 +40,8 @@ public class Enquiry {
     @JsonProperty("unique_key")
     public String uniqueKey;
 
+    @JsonProperty("hash_code")
+    public String hashCode;
+
 }
 

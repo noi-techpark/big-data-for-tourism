@@ -9,5 +9,9 @@ public class Category {
 
     @JsonProperty("name")
     public String name;
+
+    public String toString() {
+        return code;
+    }
 }
 

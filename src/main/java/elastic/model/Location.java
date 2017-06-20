@@ -12,5 +12,9 @@ public class Location {
 
     @JsonProperty("latlon")
     public GeoLocation latlon;
+
+    public String toString() {
+        return code;
+    }
 }
 
