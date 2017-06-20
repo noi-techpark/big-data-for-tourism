@@ -64,7 +64,9 @@ public class FileUploadController {
     }
 
     @GetMapping("/delete/{uniqueKey:.+}")
-    public String deleteUploadedFiles(@PathVariable String uniqueKey) throws IOException {
+    public String deleteUploadedFiles(@PathVariable String uniqueKey, Model model) throws IOException {
+        long deleted = 0;
+
         String indexName = env.getProperty("es.index");
 
         boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
@@ -98,10 +100,12 @@ public class FileUploadController {
                             .source(indexName)
                             .get();
 
-            long deleted = response.getDeleted();
+            deleted = response.getDeleted();
 
             log.info("number of deleted documents: " + deleted);
         }
+
+        model.addAttribute("deletedRows", deleted);
 
         return "deleteDataset";
     }

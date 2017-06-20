@@ -9,7 +9,12 @@
 	<h1>Tourism Data Collector</h1>
 
 	<div class="page-content">
-		Dataset was successfully deleted.
+		<div th:if="${deletedRows}">
+			Dataset was successfully deleted (<span th:text="${deletedRows}">0</span> rows).
+		</div>
+		<div th:unless="${deletedRows}">
+			Your dataset ID is not known.
+		</div>
 	</div>
 
     <br clear="all"/>
