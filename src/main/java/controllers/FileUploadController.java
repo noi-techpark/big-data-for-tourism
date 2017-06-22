@@ -7,6 +7,10 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.simplejavamail.email.Email;
+import org.simplejavamail.mailer.Mailer;
+import org.simplejavamail.mailer.config.ServerConfig;
+import org.simplejavamail.mailer.config.TransportStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +54,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.mail.Message;
+import javax.servlet.http.HttpServletRequest;
 
 @Controller
 public class FileUploadController {
@@ -117,7 +124,9 @@ public class FileUploadController {
 
     @PostMapping("/")
     public String handleFileUpload(@RequestParam("file") MultipartFile file2,
-                                   RedirectAttributes redirectAttributes) {
+                                   RedirectAttributes redirectAttributes,
+                                   @RequestParam("email") String recipientAddress,
+                                   HttpServletRequest request) {
 
         String lineSeparator = System.getProperty("line.separator");
 
@@ -315,6 +324,18 @@ public class FileUploadController {
                     client.awaitClose(1, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     log.error("could not wait for specified timeout");
+                }
+
+                if(!recipientAddress.isEmpty()) {
+                    String url = request.getRequestURL().toString();
+                    try {
+                        Email simpleMail = new Email();
+                        simpleMail.addRecipient("", recipientAddress, Message.RecipientType.TO);
+                        simpleMail.setText("Hi there!\n\nThank you for uploading your data. Your dataset ID is " + uniqueKey + ".\n\nOpen the following link to delete all your records:\n\n" + url + "delete/" + uniqueKey + "\n\nCheers");
+                        new Mailer().sendMail(simpleMail);
+                    } catch(Exception e) {
+                        log.error(e.getMessage());
+                    }
                 }
             }
 

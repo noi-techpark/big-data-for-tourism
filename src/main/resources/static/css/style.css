@@ -45,10 +45,10 @@ pre {
     margin: 0;
 }
 .button {
-    line-height: 3.445;
+    line-height: 3.0;
     padding: 0 4.4em;
     font-size: .81818rem;
-    width: 230px;
+    width: 579px;
     color: #fff;
     background-color: #587825;
     border-color: #587825;
@@ -60,15 +60,20 @@ pre {
     border: 0;
     text-transform: uppercase;
     text-decoration: none;
-    float: left;
-    margin-left: 12px;
+    text-align: center;
+}
+.button.button2 {
+    color: #fff;
+    background-color: #6f6f6e;
+    cursor: auto;
+    text-transform: none;
 }
 body {
     padding-bottom: 64px;
 }
 
 .custom-file-upload-container {
-    width: 822px;
+    width: 579px;
     margin: 0 auto;
 }
 .custom-file-upload-hidden {
