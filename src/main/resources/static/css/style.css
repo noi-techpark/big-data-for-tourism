@@ -67,6 +67,19 @@ pre {
     background-color: #6f6f6e;
     cursor: auto;
     text-transform: none;
+    margin: 2px 0;
+}
+.button.button2::-webkit-input-placeholder {
+    color: #fff;
+}
+.button.button2::-moz-placeholder {
+    color: #fff;
+}
+.button.button2::-ms-placeholder {
+    color: #fff;
+}
+.button.button2::placeholder {
+    color: #fff;
 }
 body {
     padding-bottom: 64px;
