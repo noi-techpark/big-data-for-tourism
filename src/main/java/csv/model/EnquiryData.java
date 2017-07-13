@@ -159,7 +159,7 @@ public class EnquiryData {
     public void setLengthOfStay(long lengthOfStay) { this.lengthOfStay = lengthOfStay; }
 
     public String getHash() {
-        String s = getSubmittedOn().toString().concat(getArrival().toString()).concat(getDeparture().toString()).concat(getAdults().toString()).concat(getCountry().toString());
+        String s = getSubmittedOn().toString().concat(getArrival().toString()).concat(getDeparture().toString()).concat(getAdults().toString()).concat(getCountry().toString()).concat(getCategory().toString()).concat(getBooking().toString()).concat(getCancellation().toString());
         MessageDigest m = null;
         try {
             m = MessageDigest.getInstance("MD5");
