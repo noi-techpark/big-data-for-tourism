@@ -254,7 +254,7 @@ public class FileUploadController {
                     if(months > 12) {
                         throw new Exception("length of stay of " + months + " months (since '" + result.getArrival() + "' until '" + result.getDeparture() + "') is greater than 12 months");
                     }
-                    // il set comprende delle richieste o delle prenotazioni che vengono effettuate con più di 18 mesi di anticipo rispetto alla data di arrivo.
+                    // il set comprende delle richieste o delle prenotazioni che vengono effettuate con più di 36 mesi di anticipo rispetto alla data di arrivo.
                     long months2 = ChronoUnit.MONTHS.between(result.getSubmittedOn().toLocalDate(), result.getArrival()); // https://www.leveluplunch.com/java/examples/number-of-months-between-two-dates/
                     if(months2 > 36) {
                         throw new Exception("the difference between submittedOn '" + result.getSubmittedOn() + "' and arrival '" + result.getArrival() + "' (" + months2 + " months) is greater than 36 months");
