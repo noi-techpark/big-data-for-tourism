@@ -21,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 import java.util.UUID;
 import java.util.regex.MatchResult;
@@ -269,7 +271,30 @@ public class FileUploadController {
                 } catch(Exception e) {
                     String msg = e.getMessage();
                     if(null == msg) {
-                        msg = "conversion failed";
+                        msg = "invalid data";
+                        LocalDateTime dt = LocalDateTime.now();
+                        switch(result3.get(0).getError().getIndex()) {
+                            case 0: msg = "invalid data for arrival. Allowed date format is YYYY-MM-DD (for example: " + dt.format(DateTimeFormatter.ISO_LOCAL_DATE) + ")";
+                                    break;
+                            case 1: msg = "invalid data for departure. Allowed date format is YYYY-MM-DD (for example: " + dt.format(DateTimeFormatter.ISO_LOCAL_DATE) + ")";
+                                    break;
+                            case 2: msg = "invalid data for country. Expected data type: String";
+                                    break;
+                            case 3: msg = "invalid data for adults. Expected data type: Integer";
+                                    break;
+                            case 4: msg = "invalid data for children. Expected data type: Integer";
+                                    break;
+                            case 5: msg = "invalid data for destination. Expected data type: Integer";
+                                    break;
+                            case 6: msg = "invalid data for category. Expected data type: Integer";
+                                    break;
+                            case 7: msg = "invalid data for booking. Expected data type: Integer";
+                                    break;
+                            case 8: msg = "invalid data for cancellation. Expected data type: Integer";
+                                    break;
+                            case 9: msg = "invalid data for submittedOn. Allowed date format is YYYY-MM-DDThh:mm:ss (for example: " + dt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + ")";
+                                    break;
+                        }
                     }
                     String message = "Line " + lines + ": " + msg;
 
