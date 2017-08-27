@@ -256,8 +256,8 @@ public class FileUploadController {
                     }
                     // il set comprende delle richieste o delle prenotazioni che vengono effettuate con più di 18 mesi di anticipo rispetto alla data di arrivo.
                     long months2 = ChronoUnit.MONTHS.between(result.getSubmittedOn().toLocalDate(), result.getArrival()); // https://www.leveluplunch.com/java/examples/number-of-months-between-two-dates/
-                    if(months2 > 18) {
-                        throw new Exception("the difference between submittedOn '" + result.getSubmittedOn() + "' and arrival '" + result.getArrival() + "' (" + months2 + " months) is greater than 18 months");
+                    if(months2 > 36) {
+                        throw new Exception("the difference between submittedOn '" + result.getSubmittedOn() + "' and arrival '" + result.getArrival() + "' (" + months2 + " months) is greater than 36 months");
                     }
                     String hashCode = result.getHash();
                     SearchResponse response = transportClient.prepareSearch(indexName)
