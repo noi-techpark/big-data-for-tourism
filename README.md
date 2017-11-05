@@ -60,6 +60,25 @@ es.cluster=cluster
 es.user=username:password
 ```
 
+Last but not least, setup your smtp mail server [simplejavamail.properties](src/main/resources/simplejavamail.properties):
+
+```
+# ===============================
+# = MAIL SERVER
+# ===============================
+
+# Set here configurations for the smtp mail server
+
+simplejavamail.transportstrategy=SMTP_PLAIN
+simplejavamail.smtp.host=smtp.host
+simplejavamail.smtp.port=25
+simplejavamail.smtp.username=username
+simplejavamail.smtp.password=password
+simplejavamail.defaults.subject=Congratulations! Your data has been stored
+simplejavamail.defaults.from.name=Tourism Data Collector
+simplejavamail.defaults.from.address=from@default.com
+```
+
 Congratulations. You are done!
 
 ## Running the application
