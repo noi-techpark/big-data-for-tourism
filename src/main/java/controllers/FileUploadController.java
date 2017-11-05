@@ -1,5 +1,8 @@
 package controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import controllers.storage.StorageFileNotFoundException;
 import controllers.storage.StorageService;
 import org.elasticsearch.action.bulk.byscroll.BulkByScrollResponse;
@@ -124,7 +127,8 @@ public class FileUploadController {
     @GetMapping("/")
     public String listUploadedFiles(Model model) throws IOException { return "uploadForm"; }
 
-    @PostMapping("/")
+    @RequestMapping(value = "/", method = RequestMethod.POST, produces = "application/json")
+    @ResponseBody
     public String handleFileUpload(@RequestParam("file") MultipartFile file2,
                                    RedirectAttributes redirectAttributes,
                                    @RequestParam("email") String recipientAddress,
@@ -394,9 +398,11 @@ public class FileUploadController {
             result += "</div>";
         }
 
-        redirectAttributes.addFlashAttribute("message", result);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode objectNode = mapper.createObjectNode();
+        objectNode.put("message", result);
 
-        return "redirect:/";
+        return objectNode.toString();
     }
 
     @ExceptionHandler(StorageFileNotFoundException.class)

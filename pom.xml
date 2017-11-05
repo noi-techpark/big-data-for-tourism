@@ -83,6 +83,11 @@
             <artifactId>simple-java-mail</artifactId>
             <version>4.2.3</version>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.6.3</version>
+        </dependency>
     </dependencies>
 
     <properties>

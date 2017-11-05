@@ -13,11 +13,7 @@
         <small>Please set up your CSV file in the following order separated by commas: arrival, departure, country, adults, children, destination, category, booking, cancellation and submittedOn. For example:<br/><br/><pre>"2015-01-01","2015-01-03","","2","0","21027","1","1","0","2015-01-01T01:59:00"<br/>"2015-07-03","2015-07-04","","2","0","21008","1","1","0","2015-01-01 11:27:00"</pre></small>
 	</div>
 
-	<div th:if="${message}">
-		<div class="page-content">
-			<div th:utext="${message}"/>
-		</div>
-	</div>
+	<div id="response"></div>
 
     <br/><br/>
 
@@ -28,6 +24,16 @@
   		</div>
   		<input class="button button2" type="text" name="email" placeholder="Email address (file upload notification)"/>
       <input class="button" type="submit" value="Upload"/>
+      <div>
+          <br/>
+          <div id="progressing">
+			  <progress max="100"></progress>
+			  <small><span id="progress_percent">0</span>%</small>
+		  </div>
+		  <div id="processing" class="hidden">
+			  <small>Processing data</small> <span class="loader"></span>
+		  </div>
+      </div>
     </div>
 	</form>
 

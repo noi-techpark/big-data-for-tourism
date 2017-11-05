@@ -123,3 +123,71 @@
     }
 
 }(jQuery));
+
+$('form').submit(upload);
+
+function upload(e) {
+    e.preventDefault();
+
+    var file = $('input[name="file"]').get(0).files[0];
+    var email = $('input[name="email"]').val();
+
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('email', email);
+
+    $('#response').html('');
+
+    $.ajax({
+        url: '',
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: 'json',
+        success: function(json) {
+            $('#progress_percent').text(0);
+            $('progress').attr({value: 0, max: 100});
+
+            $('#progressing').removeClass('hidden');
+            $('#processing').addClass('hidden');
+
+            $('#response').html('<div class="page-content">' + json.message + '</div>');
+        },
+        error: function(response) {
+            var error = 'error';
+            if (response.status === 409) {
+                error = response.responseText;
+            }
+            alert(error);
+
+            $('#response').html('');
+
+            $('#progress_percent').text(0);
+            $('progress').attr({value: 0, max: 100});
+
+            $('#progressing').removeClass('hidden');
+            $('#processing').addClass('hidden');
+        },
+        xhr: function() {
+            var myXhr = $.ajaxSettings.xhr();
+            if (myXhr.upload) {
+                myXhr.upload.addEventListener('progress', progress, false);
+            } else {
+                console.log('upload progress is not supported');
+            }
+            return myXhr;
+        }
+    });
+}
+function progress(e) {
+    if (e.lengthComputable) {
+        $('#progress_percent').text(Math.floor((e.loaded * 100) / e.total));
+        $('progress').attr({value: e.loaded, max: e.total});
+        if (e.loaded >= 100) {
+            $('#progressing').addClass('hidden');
+            $('#processing').removeClass('hidden');
+        }
+    }
+}
