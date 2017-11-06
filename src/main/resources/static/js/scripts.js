@@ -183,9 +183,10 @@ function upload(e) {
 }
 function progress(e) {
     if (e.lengthComputable) {
-        $('#progress_percent').text(Math.floor((e.loaded * 100) / e.total));
+        var value = Math.floor((e.loaded * 100) / e.total);
+        $('#progress_percent').text(value);
         $('progress').attr({value: e.loaded, max: e.total});
-        if (e.loaded >= 100) {
+        if (value >= 100) {
             $('#progressing').addClass('hidden');
             $('#processing').removeClass('hidden');
         }
