@@ -24,10 +24,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.stream.Collectors;
 
@@ -54,8 +54,6 @@ import java.io.*;
 import java.net.InetAddress;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,6 +145,8 @@ public class FileUploadController {
         CsvParser<EnquiryData> parser3 = new CsvParser<>(options3, mapping3);
 
         List<String> list = new ArrayList<String>();
+
+        Set<ByteBuffer> hashCodes = new HashSet<ByteBuffer>();
 
         String uniqueKey = "";
 
@@ -272,6 +272,12 @@ public class FileUploadController {
                     if(response.getHits().getTotalHits() > 0) {
                         throw new Exception("hashCode '" + hashCode + "' does already exist");
                     }
+                    byte[] hashCodeBytes = hashCode.getBytes("UTF-8");
+                    if(hashCodes.contains(ByteBuffer.wrap(hashCodeBytes))) {
+                        throw new Exception("hashCode '" + hashCode + "' does already exist");
+                    }
+
+                    hashCodes.add(ByteBuffer.wrap(hashCodeBytes));
                 } catch(Exception e) {
                     String msg = e.getMessage();
                     if(null == msg) {
