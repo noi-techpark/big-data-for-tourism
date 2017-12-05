@@ -1,0 +1,104 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>BigData4Tourism: Tourism Data Collector</title>
+	<meta charset="utf-8"/>
+	<link href="../css/style.css" rel="stylesheet"/>
+</head>
+<body>
+
+	<h1>Tourism Data Collector</h1>
+
+	<div th:if="${message}">
+		<div class="page-content">
+			<strong><span th:utext="${message}"/></strong>
+		</div>
+	</div>
+
+	<div class="page-content">
+		Add new user<br/><br/>
+	</div>
+
+	<div class="page-content">
+		<form method="POST" action="" th:action="@{/addUsers}">
+			<div id="new-emails">
+				<input class="input" type="text" name="email[]" placeholder="Email address"/>
+			</div>
+			<!-- <div>
+				<button class="button button3 js-add-participant" type="button">Add another email address</button>
+			</div> -->
+			<div>
+				<input class="button" type="submit" value="Send username and password"/>
+			</div>
+		</form>
+	</div>
+
+	<br/>
+
+	<div class="page-content">
+		List users<br/><br/>
+	</div>
+
+	<div class="page-content">
+		<table class="table" width="579" align="center">
+			<th:block th:each="username : ${users}">
+				<tr>
+					<td width="80%" th:text="${username}">User</td>
+					<td width="20%" align="right"><a th:href="@{/admin/deleteUser/{username}(username=${username})}" onclick="return confirm('Are you sure?')">Delete user</a></td>
+				</tr>
+			</th:block>
+		</table>
+	</div>
+
+	<br/>
+
+	<div th:if="${maxYear}">
+
+		<div class="page-content">
+			Users activity<br/><br/>
+		</div>
+
+		<div class="page-content">
+			<table class="table" width="579" align="center" th:each="year: ${#numbers.sequence(2015,maxYear)}">
+				<tr>
+					<td>
+						<h2 th:text="${year}">Year</h2>
+						<table width="100%">
+							<thead>
+								<tr>
+									<td>User</td>
+									<th:block th:each="month: ${#numbers.sequence(0,11)}">
+										<td align="center" th:text="${shortMonths[month]}">Month</td>
+									</th:block>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:each="username : ${aggs}">
+									<td th:text="${username.key}">User</td>
+									<th:block th:each="month: ${#numbers.sequence(1,12)}">
+										<td align="center">
+											<span th:if="${aggs.get('__${username.key}__').contains('__${year}__-__${month}__')}" th:text="X"></span>
+										</td>
+									</th:block>
+								</tr>
+							</tbody>
+						</table>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<br clear="all"/>
+
+	</div>
+
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script>
+	jQuery(function($) {
+		$('.js-add-participant').on('click', function() {
+			$('#new-emails').append('<input class="input" type="text" name="email[]" placeholder="Email address"/>');
+		});
+	});
+	</script> -->
+
+</body>
+</html>

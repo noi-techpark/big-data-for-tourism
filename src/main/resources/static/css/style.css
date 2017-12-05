@@ -85,8 +85,30 @@ pre {
 .button.button2::placeholder {
     color: #fff;
 }
+.button.button3 {
+    color: #fff;
+    background-color: #3c3d3c;
+    cursor: auto;
+    text-transform: none;
+    margin: 2px 0;
+}
+.button.button3::-webkit-input-placeholder {
+    color: #fff;
+}
+.button.button3::-moz-placeholder {
+    color: #fff;
+}
+.button.button3::-ms-placeholder {
+    color: #fff;
+}
+.button.button3::placeholder {
+    color: #fff;
+}
 body {
     padding-bottom: 64px;
+}
+.table td {
+    padding: 5px 0;
 }
 
 .custom-file-upload-container {
@@ -114,13 +136,44 @@ body {
     color: #fff;
     border: none;
     background-color: #6f6f6e;
+    float: left;
+    text-align: center;
+    /* IE 9 Fix */
     -moz-transition: all 0.2s ease-in;
     -o-transition: all 0.2s ease-in;
     -webkit-transition: all 0.2s ease-in;
     transition: all 0.2s ease-in;
-    float: left;
+}
+#new-emails {
+    width: 579px;
+    margin: 0 auto;
+}
+.input {
+    line-height: 3;
+    padding: 0 4.4em;
+    font-size: .81818rem;
+    width: 579px;
+    color: #fff;
+    border: none;
+    background-color: #6f6f6e;
     text-align: center;
     /* IE 9 Fix */
+    -moz-transition: all 0.2s ease-in;
+    -o-transition: all 0.2s ease-in;
+    -webkit-transition: all 0.2s ease-in;
+    transition: all 0.2s ease-in;
+}
+.input::-webkit-input-placeholder {
+    color: #fff;
+}
+.input::-moz-placeholder {
+    color: #fff;
+}
+.input::-ms-placeholder {
+    color: #fff;
+}
+.input::placeholder {
+    color: #fff;
 }
 .file-upload-button {
     line-height: 3.445;

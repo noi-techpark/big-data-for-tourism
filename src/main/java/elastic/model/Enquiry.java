@@ -43,5 +43,8 @@ public class Enquiry {
     @JsonProperty("hash_code")
     public String hashCode;
 
+    @JsonProperty("user")
+    public String user;
+
 }
 

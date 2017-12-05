@@ -5,10 +5,21 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import controllers.storage.StorageFileNotFoundException;
 import controllers.storage.StorageService;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.RandomStringUtils;
 import org.elasticsearch.action.bulk.byscroll.BulkByScrollResponse;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
+import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.simplejavamail.email.Email;
 import org.simplejavamail.mailer.Mailer;
@@ -17,6 +28,11 @@ import org.simplejavamail.mailer.config.TransportStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +41,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.DateFormatSymbols;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -61,6 +82,9 @@ import org.slf4j.LoggerFactory;
 import javax.mail.Message;
 import javax.servlet.http.HttpServletRequest;
 
+import org.elasticsearch.search.SearchHit;
+import org.springframework.web.servlet.view.RedirectView;
+
 @Controller
 public class FileUploadController {
 
@@ -73,6 +97,246 @@ public class FileUploadController {
     @Autowired
     public FileUploadController(StorageService storageService) {
         this.storageService = storageService;
+    }
+
+    @GetMapping("/admin")
+    @Secured("ROLE_ADMIN")
+    public String adminArea(Model model) throws IOException {
+        String indexName = env.getProperty("es.index");
+        String indexNameUserdetails = env.getProperty("es.userdetails", String.class, "tourism-collector-users");
+
+        BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
+                .build());
+
+        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
+        String cluster = env.getProperty("es.cluster");
+        String user = env.getProperty("es.user");
+
+        Settings settings = Settings.builder()
+                .put("client.transport.nodes_sampler_interval", "5s")
+                .put("client.transport.sniff", false)
+                .put("transport.tcp.compress", true)
+                .put("cluster.name", cluster)
+                .put("xpack.security.transport.ssl.enabled", enableSsl)
+                .put("request.headers.X-Found-Cluster", cluster)
+                .put("xpack.security.user", user)
+                .build();
+
+        int maxYear = 0;
+        ArrayList<String> users = new ArrayList<String>();
+        Map<String, ArrayList<String>> aggs = new HashMap<String, ArrayList<String>>();
+
+        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
+
+            String endpoint = env.getProperty("es.endpoint");
+            int port = Integer.parseInt(env.getProperty("es.port"));
+
+            try {
+                transportClient
+                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
+            } catch (Exception e) {
+                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
+            }
+
+            SearchResponse response = transportClient.prepareSearch(indexNameUserdetails)
+                    .setSource(new SearchSourceBuilder().size(1000))
+                    .get();
+
+            if(response.getHits().getTotalHits() > 0) {
+                for (SearchHit hit :
+                        response.getHits()) {
+                    users.add(hit.getId().toString());
+                }
+            }
+
+            AggregationBuilder aggregation =
+                    AggregationBuilders
+                            .terms("aggs")
+                            .field("user");
+
+            AggregationBuilder aggregation2 =
+                    AggregationBuilders
+                            .dateHistogram("aggs2")
+                            .field("arrival")
+                            .dateHistogramInterval(DateHistogramInterval.MONTH)
+                            .format("yyyy-MM");
+
+            SearchResponse response2 = transportClient.prepareSearch(indexName)
+                    .setSource(new SearchSourceBuilder().size(0))
+                    .addAggregation(aggregation.subAggregation(aggregation2))
+                    .get();
+
+            Terms agg = response2.getAggregations().get("aggs");
+
+            for (Terms.Bucket entry : agg.getBuckets()) {
+                String username = entry.getKey().toString();
+
+                ArrayList<String> keys = new ArrayList<String>();
+
+                Histogram agg2 = entry.getAggregations().get("aggs2");
+                for (Histogram.Bucket entry2 : agg2.getBuckets()) {
+                    String key = entry2.getKey().toString();
+
+                    String[] parts = key.split("-");
+                    int year = Integer.parseInt(parts[0]);
+                    int month = Integer.parseInt(parts[1]);
+                    String formattedKey = year + "-" + month;
+
+                    keys.add(formattedKey);
+
+                    if (year > maxYear) {
+                        maxYear = year;
+                    }
+                }
+
+                aggs.put(username, keys);
+            }
+
+        }
+
+        ArrayList<String> months = new ArrayList<String>();
+        for (int i = 0; i <= 11; i++) {
+            months.add(new DateFormatSymbols(new Locale("en", "GB")).getShortMonths()[i]);
+        }
+
+        model.addAttribute("users", users);
+        model.addAttribute("aggs", aggs);
+        model.addAttribute("maxYear", maxYear);
+        model.addAttribute("shortMonths", months);
+
+        return "adminArea";
+    }
+
+    @RequestMapping(value = "/addUsers", method = RequestMethod.POST)
+    @Secured("ROLE_ADMIN")
+    public RedirectView addUsers(RedirectAttributes redirectAttributes,
+                                 @RequestParam("email[]") String[] emails) {
+
+        String indexNameUserdetails = env.getProperty("es.userdetails", String.class, "tourism-collector-users");
+
+        BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
+                .build());
+
+        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
+        String cluster = env.getProperty("es.cluster");
+        String user = env.getProperty("es.user");
+
+        Settings settings = Settings.builder()
+                .put("client.transport.nodes_sampler_interval", "5s")
+                .put("client.transport.sniff", false)
+                .put("transport.tcp.compress", true)
+                .put("cluster.name", cluster)
+                .put("xpack.security.transport.ssl.enabled", enableSsl)
+                .put("request.headers.X-Found-Cluster", cluster)
+                .put("xpack.security.user", user)
+                .build();
+
+        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
+
+            String endpoint = env.getProperty("es.endpoint");
+            int port = Integer.parseInt(env.getProperty("es.port"));
+
+            try {
+                transportClient
+                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
+            } catch (Exception e) {
+                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
+            }
+
+            for (String email :
+                    emails) {
+                String username = UUID.randomUUID().toString().replace("-", "");
+                String password = RandomStringUtils.randomAlphabetic(20);
+                byte[] hash = stringToMD5(password);
+                String encryptedPassword = new String(Hex.encodeHex(hash));
+
+                Map<String, Object> jsonMap = new HashMap<>();
+                jsonMap.put("password", encryptedPassword);
+                jsonMap.put("authority", "ROLE_USER");
+                jsonMap.put("created_on", new Date());
+
+                IndexRequest indexRequest = new IndexRequest(indexNameUserdetails,"user", username)
+                        .source(jsonMap);
+                IndexResponse response = transportClient.index(indexRequest).actionGet();
+
+                log.info("new user: " + username);
+
+                try {
+                    Email simpleMail = new Email();
+                    simpleMail.addRecipient("", email, Message.RecipientType.TO);
+                    simpleMail.setSubject("Tourism Data Collector: Your username and password");
+                    simpleMail.setText("Hi there!\n\nYour username: " + username + "\n\nYour password: " + password + "\n\nCheers");
+                    new Mailer().sendMail(simpleMail);
+                } catch(Exception e) {
+                    log.error(e.getMessage());
+                }
+            }
+
+        }
+
+        redirectAttributes.addFlashAttribute("message", "<small>Congratulations! The user was successfully created</small><br/><br/>");
+
+        return new RedirectView("/admin");
+    }
+
+    @GetMapping("/admin/deleteUser/{username:.+}")
+    @Secured("ROLE_ADMIN")
+    public RedirectView deleteUser(RedirectAttributes redirectAttributes,
+                                 @PathVariable String username) {
+
+        String indexNameUserdetails = env.getProperty("es.userdetails", String.class, "tourism-collector-users");
+
+        BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
+                .build());
+
+        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
+        String cluster = env.getProperty("es.cluster");
+        String user = env.getProperty("es.user");
+
+        Settings settings = Settings.builder()
+                .put("client.transport.nodes_sampler_interval", "5s")
+                .put("client.transport.sniff", false)
+                .put("transport.tcp.compress", true)
+                .put("cluster.name", cluster)
+                .put("xpack.security.transport.ssl.enabled", enableSsl)
+                .put("request.headers.X-Found-Cluster", cluster)
+                .put("xpack.security.user", user)
+                .build();
+
+        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
+
+            String endpoint = env.getProperty("es.endpoint");
+            int port = Integer.parseInt(env.getProperty("es.port"));
+
+            try {
+                transportClient
+                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
+            } catch (Exception e) {
+                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
+            }
+
+            DeleteResponse response = transportClient.prepareDelete(indexNameUserdetails, "user", username).get();
+
+        }
+
+        redirectAttributes.addFlashAttribute("message", "<small>Congratulations! The user was successfully deleted</small><br/><br/>");
+
+        return new RedirectView("/admin");
+    }
+
+    private byte[] stringToMD5(String value) {
+        byte[] hash = null;
+        try {
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            InputStream stream = new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8));
+            DigestInputStream inputStream = new DigestInputStream(stream, md5);
+            while (inputStream.read() != -1);
+            hash = md5.digest();
+        } catch (NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        return hash;
     }
 
     @GetMapping("/delete/{uniqueKey:.+}")
@@ -131,6 +395,10 @@ public class FileUploadController {
                                    RedirectAttributes redirectAttributes,
                                    @RequestParam("email") String recipientAddress,
                                    HttpServletRequest request) {
+
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String username = ((User) principal).getUsername();
 
         String lineSeparator = System.getProperty("line.separator");
 
@@ -347,7 +615,7 @@ public class FileUploadController {
                     while(line != null) {
                         List<CsvMappingResult<EnquiryData>> result3 = parser3.readFromString(line, new CsvReaderOptions(lineSeparator)).collect(Collectors.toList());
 
-                        client.index(EnquiryDataConverter.convert(result3.get(0).getResult(), uniqueKey));
+                        client.index(EnquiryDataConverter.convert(result3.get(0).getResult(), uniqueKey, username));
 
                         line = reader2.readLine();
                     }

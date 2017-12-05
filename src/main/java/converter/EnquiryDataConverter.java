@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter;
 
 public class EnquiryDataConverter {
 
-    public static Enquiry convert(EnquiryData csvEnquiryData, String uniqueKey) {
+    public static Enquiry convert(EnquiryData csvEnquiryData, String uniqueKey, String user) {
 
         Enquiry enquiry = new Enquiry();
 
@@ -24,6 +24,7 @@ public class EnquiryDataConverter {
         enquiry.lengthOfStay = csvEnquiryData.getLengthOfStay();
         enquiry.uniqueKey = uniqueKey;
         enquiry.hashCode = csvEnquiryData.getHash();
+        enquiry.user = user;
 
         return enquiry;
     }
