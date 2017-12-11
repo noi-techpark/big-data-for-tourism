@@ -103,7 +103,7 @@ public class FileUploadController {
     @Secured("ROLE_ADMIN")
     public String adminArea(Model model) throws IOException {
         String indexName = env.getProperty("es.index");
-        String indexNameUserdetails = env.getProperty("es.userdetails", String.class, "tourism-collector-users");
+        String indexNameUserdetails = env.getProperty("es.userdetails");
 
         BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
                 .build());
@@ -212,7 +212,7 @@ public class FileUploadController {
     public RedirectView addUsers(RedirectAttributes redirectAttributes,
                                  @RequestParam("email[]") String[] emails) {
 
-        String indexNameUserdetails = env.getProperty("es.userdetails", String.class, "tourism-collector-users");
+        String indexNameUserdetails = env.getProperty("es.userdetails");
 
         BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
                 .build());
@@ -284,7 +284,7 @@ public class FileUploadController {
     public RedirectView deleteUser(RedirectAttributes redirectAttributes,
                                  @PathVariable String username) {
 
-        String indexNameUserdetails = env.getProperty("es.userdetails", String.class, "tourism-collector-users");
+        String indexNameUserdetails = env.getProperty("es.userdetails");
 
         BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
                 .build());

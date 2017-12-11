@@ -69,7 +69,7 @@ class Users implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
-        String indexNameUserdetails = env.getProperty("es.userdetails", String.class, "tourism-collector-users");
+        String indexNameUserdetails = env.getProperty("es.userdetails");
 
         BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
                 .build());
