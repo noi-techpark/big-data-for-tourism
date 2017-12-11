@@ -58,6 +58,7 @@ es.index=index
 es.type=index-type
 es.cluster=cluster
 es.user=username:password
+es.userdetails=index-userdetails
 ```
 
 Last but not least, setup your smtp mail server [simplejavamail.properties](src/main/resources/simplejavamail.properties):
@@ -94,3 +95,115 @@ Making a WAR file is straight forward enough and can be accomplished by executin
 `mvn package`
 
 You can now take a look in the ${basedir}/target directory and you will see the generated WAR file.
+
+## Elasticsearch Indices
+
+```json
+PUT /index-userdetails
+{
+  "mappings": {
+    "user": {
+      "_all": {
+        "enabled": false
+      },
+      "properties": {
+        "password": {
+          "type": "keyword"
+        },
+        "authority": {
+          "type": "keyword"
+        },
+        "created_on": {
+          "type": "date",
+          "format": "epoch_millis||date||date_time"
+        }
+      }
+    }
+  }
+}
+
+PUT /index
+{
+  "mappings": {
+    "index-type": {
+      "_all": {
+        "enabled": false
+      },
+      "properties": {
+        "arrival": {
+          "type": "date",
+          "format": "epoch_millis||date"
+        },
+        "departure": {
+          "type": "date",
+          "format": "epoch_millis||date"
+        },
+        "country": {
+          "properties": {
+            "code": {
+              "type": "keyword"
+            },
+            "name": {
+              "type": "keyword"
+            },
+            "latlon": {
+              "type": "geo_point"
+            }
+          }
+        },
+        "adults": {
+          "type": "byte"
+        },
+        "children": {
+          "type": "byte"
+        },
+        "destination": {
+          "properties": {
+            "code": {
+              "type": "short"
+            },
+            "name": {
+              "type": "keyword"
+            },
+            "latlon": {
+              "type": "geo_point"
+            }
+          }
+        },
+        "category": {
+          "properties": {
+            "code": {
+              "type": "byte"
+            },
+            "name": {
+              "type": "keyword"
+            }
+          }
+        },
+        "booking": {
+          "type": "boolean"
+        },
+        "cancellation": {
+          "type": "boolean"
+        },
+        "submitted_on": {
+          "type": "date",
+          "format": "epoch_millis||date_hour_minute_second"
+        },
+        "length_of_stay": {
+          "type": "short"
+        },
+        "unique_key": {
+          "type": "keyword"
+        },
+        "hash_code": {
+          "type": "keyword"
+        },
+        "user": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}
+```
