@@ -100,9 +100,16 @@ class Users implements UserDetailsService {
                 log.error("could not resolve es endpoint: " + endpoint + ":" + port);
             }
 
-            SearchResponse response = transportClient.prepareSearch(indexNameUserdetails)
-                    .setSource(new SearchSourceBuilder().size(1).query(QueryBuilders.termQuery("_id", username)))
-                    .get();
+            SearchResponse response = null;
+            try {
+                response = transportClient.prepareSearch(indexNameUserdetails)
+                        .setSource(new SearchSourceBuilder().size(1).query(QueryBuilders.termQuery("_id", username)))
+                        .get();
+            } catch (Exception e) {
+                log.error("search response error: " + e.toString());
+            }
+
+            log.info("total hits: " + response.getHits().getTotalHits());
 
             if(response.getHits().getTotalHits() > 0) {
                 List<GrantedAuthority> auth = AuthorityUtils
@@ -112,6 +119,10 @@ class Users implements UserDetailsService {
                             .commaSeparatedStringToAuthorityList("ROLE_ADMIN");
                 }
                 String password = response.getHits().getAt(0).getSource().get("password").toString();
+
+                log.info("username: " + username);
+                log.info("role: " + auth.toString());
+
                 return new org.springframework.security.core.userdetails.User(username, password, auth);
             }
 
