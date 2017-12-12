@@ -209,7 +209,7 @@ public class FileUploadController {
 
     @RequestMapping(value = "/addUsers", method = RequestMethod.POST)
     @Secured("ROLE_ADMIN")
-    public RedirectView addUsers(RedirectAttributes redirectAttributes,
+    public String addUsers(RedirectAttributes redirectAttributes,
                                  @RequestParam("email[]") String[] emails) {
 
         String indexNameUserdetails = env.getProperty("es.userdetails");
@@ -276,12 +276,12 @@ public class FileUploadController {
 
         redirectAttributes.addFlashAttribute("message", "<small>Congratulations! The user was successfully created</small><br/><br/>");
 
-        return new RedirectView("/admin");
+        return "redirect:/admin";
     }
 
-    @GetMapping("/admin/deleteUser/{username:.+}")
+    @GetMapping("/admin/deleteUser/{username}")
     @Secured("ROLE_ADMIN")
-    public RedirectView deleteUser(RedirectAttributes redirectAttributes,
+    public String deleteUser(RedirectAttributes redirectAttributes,
                                  @PathVariable String username) {
 
         String indexNameUserdetails = env.getProperty("es.userdetails");
@@ -317,11 +317,13 @@ public class FileUploadController {
 
             DeleteResponse response = transportClient.prepareDelete(indexNameUserdetails, "user", username).get();
 
+            log.info("user deleted: " + username);
+
         }
 
         redirectAttributes.addFlashAttribute("message", "<small>Congratulations! The user was successfully deleted</small><br/><br/>");
 
-        return new RedirectView("/admin");
+        return "redirect:/admin";
     }
 
     private byte[] stringToMD5(String value) {
