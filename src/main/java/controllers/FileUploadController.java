@@ -406,6 +406,68 @@ public class FileUploadController {
         return "redirect:/admin";
     }
 
+    @GetMapping("/admin/notifyUser/{username}/{year}/{month}")
+    @Secured("ROLE_ADMIN")
+    public String notifyUser(RedirectAttributes redirectAttributes,
+                             @PathVariable String username,
+                             @PathVariable int year,
+                             @PathVariable int month) {
+
+        String indexNameUserdetails = env.getProperty("es.userdetails");
+
+        BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
+                .build());
+
+        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
+        String cluster = env.getProperty("es.cluster");
+        String user = env.getProperty("es.user");
+
+        Settings settings = Settings.builder()
+                .put("client.transport.nodes_sampler_interval", "5s")
+                .put("client.transport.sniff", false)
+                .put("transport.tcp.compress", true)
+                .put("cluster.name", cluster)
+                .put("xpack.security.transport.ssl.enabled", enableSsl)
+                .put("request.headers.X-Found-Cluster", cluster)
+                .put("xpack.security.user", user)
+                .build();
+
+        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
+
+            String endpoint = env.getProperty("es.endpoint");
+            int port = Integer.parseInt(env.getProperty("es.port"));
+
+            try {
+                transportClient
+                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
+            } catch (Exception e) {
+                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
+            }
+
+            SearchResponse response = transportClient.prepareSearch(indexNameUserdetails)
+                    .setSource(new SearchSourceBuilder().size(1).query(QueryBuilders.termQuery("_id", username)))
+                    .get();
+
+            if(response.getHits().getTotalHits() > 0) {
+                String email = response.getHits().getAt(0).getSource().get("email").toString();
+                String shortMonth = new DateFormatSymbols(new Locale("en", "GB")).getShortMonths()[month];
+
+                Email simpleMail = new Email();
+                simpleMail.addRecipient("", email, Message.RecipientType.TO);
+                simpleMail.setSubject("Tourism Data Collector: Missing data for " + year + "/" + shortMonth);
+                simpleMail.setText("Hi!\n\nPlease upload your data for " + year + "/" + shortMonth + "!\n\nCheers");
+                new Mailer().sendMail(simpleMail);
+
+                log.info("notify " + username + " for missing data");
+            }
+
+        }
+
+        redirectAttributes.addFlashAttribute("message", "<small>The user " + username + " has been informed about missing data</small><br/><br/>");
+
+        return "redirect:/admin";
+    }
+
     private byte[] stringToMD5(String value) {
         byte[] hash = null;
         try {
