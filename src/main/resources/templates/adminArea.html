@@ -42,8 +42,9 @@
 		<table class="table" width="579" align="center">
 			<th:block th:each="username : ${users}">
 				<tr>
-					<td width="80%" th:text="${username}">User</td>
-					<td width="20%" align="right"><a th:href="@{/admin/deleteUser/{username}(username=${username})}" onclick="return confirm('Are you sure?')">Delete user</a></td>
+					<td width="50%" th:text="${username}">User</td>
+					<td width="30%" align="center"><a th:href="@{/admin/setNewPasswordForUser/{username}(username=${username})}" onclick="return confirm('Are you sure to change users password?')">Set new password</a></td>
+					<td width="20%" align="center"><a th:href="@{/admin/deleteUser/{username}(username=${username})}" onclick="return confirm('Are you sure to delete this user?')">Delete user</a></td>
 				</tr>
 			</th:block>
 		</table>

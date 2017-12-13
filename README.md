@@ -107,6 +107,9 @@ PUT /index-userdetails
         "enabled": false
       },
       "properties": {
+        "email": {
+          "type": "keyword"
+        },
         "password": {
           "type": "keyword"
         },

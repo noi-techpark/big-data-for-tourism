@@ -12,6 +12,7 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
@@ -84,6 +85,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.elasticsearch.search.SearchHit;
 import org.springframework.web.servlet.view.RedirectView;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 @Controller
 public class FileUploadController {
@@ -251,6 +254,7 @@ public class FileUploadController {
                 String encryptedPassword = new String(Hex.encodeHex(hash));
 
                 Map<String, Object> jsonMap = new HashMap<>();
+                jsonMap.put("email", email);
                 jsonMap.put("password", encryptedPassword);
                 jsonMap.put("authority", "ROLE_USER");
                 jsonMap.put("created_on", new Date());
@@ -322,6 +326,82 @@ public class FileUploadController {
         }
 
         redirectAttributes.addFlashAttribute("message", "<small>Congratulations! The user was successfully deleted</small><br/><br/>");
+
+        return "redirect:/admin";
+    }
+
+    @GetMapping("/admin/setNewPasswordForUser/{username}")
+    @Secured("ROLE_ADMIN")
+    public String setNewPasswordForUser(RedirectAttributes redirectAttributes,
+                             @PathVariable String username) {
+
+        String indexNameUserdetails = env.getProperty("es.userdetails");
+
+        BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
+                .build());
+
+        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
+        String cluster = env.getProperty("es.cluster");
+        String user = env.getProperty("es.user");
+
+        Settings settings = Settings.builder()
+                .put("client.transport.nodes_sampler_interval", "5s")
+                .put("client.transport.sniff", false)
+                .put("transport.tcp.compress", true)
+                .put("cluster.name", cluster)
+                .put("xpack.security.transport.ssl.enabled", enableSsl)
+                .put("request.headers.X-Found-Cluster", cluster)
+                .put("xpack.security.user", user)
+                .build();
+
+        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
+
+            String endpoint = env.getProperty("es.endpoint");
+            int port = Integer.parseInt(env.getProperty("es.port"));
+
+            try {
+                transportClient
+                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
+            } catch (Exception e) {
+                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
+            }
+
+            SearchResponse response = transportClient.prepareSearch(indexNameUserdetails)
+                    .setSource(new SearchSourceBuilder().size(1).query(QueryBuilders.termQuery("_id", username)))
+                    .get();
+
+            if(response.getHits().getTotalHits() > 0) {
+                String email = response.getHits().getAt(0).getSource().get("email").toString();
+                String password = RandomStringUtils.randomAlphabetic(20);
+                byte[] hash = stringToMD5(password);
+                String encryptedPassword = new String(Hex.encodeHex(hash));
+
+                try {
+                    UpdateRequest updateRequest = new UpdateRequest();
+                    updateRequest.index(indexNameUserdetails);
+                    updateRequest.type("user");
+                    updateRequest.id(username);
+                    updateRequest.doc(jsonBuilder()
+                            .startObject()
+                            .field("password", encryptedPassword)
+                            .endObject());
+                    transportClient.update(updateRequest).get();
+
+                    Email simpleMail = new Email();
+                    simpleMail.addRecipient("", email, Message.RecipientType.TO);
+                    simpleMail.setSubject("Tourism Data Collector: Your new password");
+                    simpleMail.setText("Hi there!\n\nYour username: " + username + "\n\nYour password: " + password + "\n\nCheers");
+                    new Mailer().sendMail(simpleMail);
+
+                    log.info("set a new password for: " + username);
+                } catch (Exception e) {
+                    log.error(e.getMessage());
+                }
+            }
+
+        }
+
+        redirectAttributes.addFlashAttribute("message", "<small>Yay! A new password has been sent to " + username + "</small><br/><br/>");
 
         return "redirect:/admin";
     }
