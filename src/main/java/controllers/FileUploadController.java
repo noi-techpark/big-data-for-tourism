@@ -450,7 +450,7 @@ public class FileUploadController {
 
             if(response.getHits().getTotalHits() > 0) {
                 String email = response.getHits().getAt(0).getSource().get("email").toString();
-                String shortMonth = new DateFormatSymbols(new Locale("en", "GB")).getShortMonths()[month];
+                String shortMonth = new DateFormatSymbols(new Locale("en", "GB")).getShortMonths()[month - 1];
 
                 Email simpleMail = new Email();
                 simpleMail.addRecipient("", email, Message.RecipientType.TO);
