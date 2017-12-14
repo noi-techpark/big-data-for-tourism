@@ -280,7 +280,7 @@ public class FileUploadController {
 
         redirectAttributes.addFlashAttribute("message", "<small>Congratulations! The user was successfully created</small><br/><br/>");
 
-        return "redirect:/admin";
+        return "redirect:/admin/";
     }
 
     @GetMapping("/admin/deleteUser/{username}")
@@ -327,7 +327,7 @@ public class FileUploadController {
 
         redirectAttributes.addFlashAttribute("message", "<small>Congratulations! The user was successfully deleted</small><br/><br/>");
 
-        return "redirect:/admin";
+        return "redirect:/admin/";
     }
 
     @GetMapping("/admin/setNewPasswordForUser/{username}")
@@ -403,7 +403,7 @@ public class FileUploadController {
 
         redirectAttributes.addFlashAttribute("message", "<small>Yay! A new password has been sent to " + username + "</small><br/><br/>");
 
-        return "redirect:/admin";
+        return "redirect:/admin/";
     }
 
     @GetMapping("/admin/notifyUser/{username}/{year}/{month}")
@@ -465,7 +465,7 @@ public class FileUploadController {
 
         redirectAttributes.addFlashAttribute("message", "<small>The user " + username + " has been informed about missing data</small><br/><br/>");
 
-        return "redirect:/admin";
+        return "redirect:/admin/";
     }
 
     private byte[] stringToMD5(String value) {
