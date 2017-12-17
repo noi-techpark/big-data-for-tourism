@@ -18,6 +18,9 @@ import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.filters.Filters;
+import org.elasticsearch.search.aggregations.bucket.filters.FiltersAggregator;
+import org.elasticsearch.search.aggregations.bucket.filter.Filter;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
@@ -531,7 +534,73 @@ public class FileUploadController {
     }
 
     @GetMapping("/")
-    public String listUploadedFiles(Model model) throws IOException { return "uploadForm"; }
+    public String listUploadedFiles(Model model) throws IOException {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String username = ((User) principal).getUsername();
+
+        String indexName = env.getProperty("es.index");
+
+        BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
+                .build());
+
+        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
+        String cluster = env.getProperty("es.cluster");
+        String user = env.getProperty("es.user");
+
+        Settings settings = Settings.builder()
+                .put("client.transport.nodes_sampler_interval", "5s")
+                .put("client.transport.sniff", false)
+                .put("transport.tcp.compress", true)
+                .put("cluster.name", cluster)
+                .put("xpack.security.transport.ssl.enabled", enableSsl)
+                .put("request.headers.X-Found-Cluster", cluster)
+                .put("xpack.security.user", user)
+                .build();
+
+        ArrayList<String> uniqueKeys = new ArrayList<String>();
+
+        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
+
+            String endpoint = env.getProperty("es.endpoint");
+            int port = Integer.parseInt(env.getProperty("es.port"));
+
+            try {
+                transportClient
+                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
+            } catch (Exception e) {
+                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
+            }
+
+            AggregationBuilder aggregation =
+                    AggregationBuilders
+                            .filter("aggs", QueryBuilders.termQuery("user", username));
+
+            AggregationBuilder aggregation2 =
+                    AggregationBuilders
+                            .terms("aggs2")
+                            .field("unique_key");
+
+            SearchResponse response2 = transportClient.prepareSearch(indexName)
+                    .setSource(new SearchSourceBuilder().size(0))
+                    .addAggregation(aggregation.subAggregation(aggregation2))
+                    .get();
+
+            Filter agg = response2.getAggregations().get("aggs");
+            Terms agg2 = agg.getAggregations().get("aggs2");
+            for (Terms.Bucket entry2 : agg2.getBuckets()) {
+                String uniqueKey = entry2.getKey().toString();
+
+                uniqueKeys.add(uniqueKey);
+            }
+
+            log.info("sets: " + uniqueKeys.toString());
+        }
+
+        model.addAttribute("uniqueKeys", uniqueKeys);
+
+        return "uploadForm";
+    }
 
     @RequestMapping(value = "/", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody

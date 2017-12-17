@@ -37,6 +37,27 @@
     </div>
 	</form>
 
+	<div th:if="${#lists.size(uniqueKeys)}">
+
+		<br/>
+
+		<div class="page-content">
+			Dataset overview<br/><br/>
+		</div>
+
+		<div class="page-content">
+			<table class="table" width="579" align="center">
+				<th:block th:each="uniqueKey : ${uniqueKeys}">
+					<tr>
+						<td width="80%" th:text="${uniqueKey}">UniqueKey</td>
+						<td width="20%"><a th:href="@{/delete/{uniqueKey}(uniqueKey=${uniqueKey})}" onclick="return confirm('Are you sure to delete this set?')">Delete set</a></td>
+					</tr>
+				</th:block>
+			</table>
+		</div>
+
+	</div>
+
     <br clear="all"/>
 
 	<div class="page-content">
