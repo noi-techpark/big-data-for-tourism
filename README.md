@@ -198,6 +198,9 @@ PUT /index
         },
         "user": {
           "type": "keyword"
+        },
+        "days_before_arrival": {
+          "type": "short"
         }
       }
     }
