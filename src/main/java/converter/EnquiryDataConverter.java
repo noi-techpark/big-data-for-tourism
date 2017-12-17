@@ -25,6 +25,7 @@ public class EnquiryDataConverter {
         enquiry.uniqueKey = uniqueKey;
         enquiry.hashCode = csvEnquiryData.getHash();
         enquiry.user = user;
+        enquiry.daysBeforeArrival = csvEnquiryData.getDaysBeforeArrival();
 
         return enquiry;
     }

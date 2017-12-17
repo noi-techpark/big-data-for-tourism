@@ -46,5 +46,8 @@ public class Enquiry {
     @JsonProperty("user")
     public String user;
 
+    @JsonProperty("days_before_arrival")
+    public long daysBeforeArrival;
+
 }
 
