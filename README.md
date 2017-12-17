@@ -196,12 +196,6 @@ PUT /index
         "length_of_stay": {
           "type": "short"
         },
-        "unique_key": {
-          "type": "text"
-        },
-        "hash_code": {
-          "type": "text"
-        },
         "user": {
           "type": "keyword"
         }
