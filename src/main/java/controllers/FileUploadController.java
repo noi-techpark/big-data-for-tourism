@@ -579,7 +579,7 @@ public class FileUploadController {
             AggregationBuilder aggregation2 =
                     AggregationBuilders
                             .terms("aggs2")
-                            .field("unique_key");
+                            .field("unique_key.keyword");
 
             SearchResponse response2 = transportClient.prepareSearch(indexName)
                     .setSource(new SearchSourceBuilder().size(0))

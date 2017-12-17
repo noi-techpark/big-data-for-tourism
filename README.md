@@ -197,10 +197,10 @@ PUT /index
           "type": "short"
         },
         "unique_key": {
-          "type": "keyword"
+          "type": "text"
         },
         "hash_code": {
-          "type": "keyword"
+          "type": "text"
         },
         "user": {
           "type": "keyword"
