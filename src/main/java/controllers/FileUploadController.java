@@ -487,7 +487,7 @@ public class FileUploadController {
     }
 
     @GetMapping("/delete/{uniqueKey:.+}")
-    public String deleteUploadedFiles(@PathVariable String uniqueKey, Model model) throws IOException {
+    public String deleteUploadedFiles(@PathVariable String uniqueKey, RedirectAttributes redirectAttributes) throws IOException {
         long deleted = 0;
 
         String indexName = env.getProperty("es.index");
@@ -528,9 +528,9 @@ public class FileUploadController {
             log.info("number of deleted documents: " + deleted);
         }
 
-        model.addAttribute("deletedRows", deleted);
+        redirectAttributes.addFlashAttribute("message", "<small>Dataset was successfully deleted (" + deleted + " rows).</small><br/><br/>");
 
-        return "deleteDataset";
+        return "redirect:/";
     }
 
     @GetMapping("/")
