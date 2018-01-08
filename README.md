@@ -201,6 +201,10 @@ PUT /index
         },
         "days_before_arrival": {
           "type": "short"
+        },
+        "uploaded_on": {
+          "type": "date",
+          "format": "epoch_millis||date_hour_minute_second"
         }
       }
     }

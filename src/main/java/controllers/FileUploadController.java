@@ -814,6 +814,7 @@ public class FileUploadController {
 
             if(errors == 0) {
                 uniqueKey = UUID.randomUUID().toString();
+                LocalDateTime uploadedOn = LocalDateTime.now();
 
                 String message = "your data has been stored";
 
@@ -828,7 +829,7 @@ public class FileUploadController {
                     while(line != null) {
                         List<CsvMappingResult<EnquiryData>> result3 = parser3.readFromString(line, new CsvReaderOptions(lineSeparator)).collect(Collectors.toList());
 
-                        client.index(EnquiryDataConverter.convert(result3.get(0).getResult(), uniqueKey, username));
+                        client.index(EnquiryDataConverter.convert(result3.get(0).getResult(), uniqueKey, username, uploadedOn));
 
                         line = reader2.readLine();
                     }

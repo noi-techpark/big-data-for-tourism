@@ -39,6 +39,7 @@ public class EnquiryDataMapper extends BaseElasticSearchMapping {
             .add(new KeywordFieldMapper.Builder("hash_code"))
             .add(new KeywordFieldMapper.Builder("user"))
             .add(new ScaledFloatFieldMapper.Builder("days_before_arrival").scalingFactor(1))
+            .add(new DateFieldMapper.Builder("uploaded_on"))
             ;
     }
 }

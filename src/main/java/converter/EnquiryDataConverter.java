@@ -3,11 +3,12 @@ package converter;
 import csv.model.EnquiryData;
 import elastic.model.Enquiry;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class EnquiryDataConverter {
 
-    public static Enquiry convert(EnquiryData csvEnquiryData, String uniqueKey, String user) {
+    public static Enquiry convert(EnquiryData csvEnquiryData, String uniqueKey, String user, LocalDateTime uploadedOn) {
 
         Enquiry enquiry = new Enquiry();
 
@@ -26,6 +27,7 @@ public class EnquiryDataConverter {
         enquiry.hashCode = csvEnquiryData.getHash();
         enquiry.user = user;
         enquiry.daysBeforeArrival = csvEnquiryData.getDaysBeforeArrival();
+        enquiry.uploadedOn = uploadedOn.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
         return enquiry;
     }
