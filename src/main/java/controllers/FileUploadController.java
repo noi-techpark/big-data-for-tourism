@@ -814,7 +814,7 @@ public class FileUploadController {
 
             if(errors == 0) {
                 uniqueKey = UUID.randomUUID().toString();
-                LocalDateTime uploadedOn = LocalDateTime.now();
+                LocalDateTime uploadedOn = LocalDateTime.now().withNano(0);
 
                 String message = "your data has been stored";
 
