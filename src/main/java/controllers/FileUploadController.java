@@ -44,13 +44,16 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormatSymbols;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.MatchResult;
@@ -558,7 +561,7 @@ public class FileUploadController {
                 .put("xpack.security.user", user)
                 .build();
 
-        ArrayList<String> uniqueKeys = new ArrayList<String>();
+        Map<String, String> uniqueKeys = new HashMap<>();
 
         try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
 
@@ -579,19 +582,33 @@ public class FileUploadController {
             AggregationBuilder aggregation2 =
                     AggregationBuilders
                             .terms("aggs2")
-                            .field("unique_key.keyword");
+                            .field("unique_key.keyword")
+                            .order(Terms.Order.aggregation("aggs3", false));
+
+            AggregationBuilder aggregation3 =
+                    AggregationBuilders
+                            .max("aggs3")
+                            .field("uploaded_on");
 
             SearchResponse response2 = transportClient.prepareSearch(indexName)
                     .setSource(new SearchSourceBuilder().size(0))
-                    .addAggregation(aggregation.subAggregation(aggregation2))
+                    .addAggregation(aggregation.subAggregation(aggregation2.subAggregation(aggregation3)))
                     .get();
 
             Filter agg = response2.getAggregations().get("aggs");
             Terms agg2 = agg.getAggregations().get("aggs2");
             for (Terms.Bucket entry2 : agg2.getBuckets()) {
                 String uniqueKey = entry2.getKey().toString();
+                Long uploadedOn = new Long(0);
+                try {
+                    uploadedOn = new BigDecimal(entry2.getAggregations().get("aggs3").getProperty("value").toString()).longValue();
+                } catch(NumberFormatException e) {
+                    log.error(e.getMessage());
+                }
+                LocalDateTime dt = LocalDateTime.ofInstant(Instant.ofEpochMilli(uploadedOn), ZoneId.systemDefault());
+                String formattedDt = dt.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
 
-                uniqueKeys.add(uniqueKey);
+                uniqueKeys.put(uniqueKey, formattedDt);
             }
 
             log.info("sets: " + uniqueKeys.toString());
