@@ -101,6 +101,7 @@
     </properties>
 
     <build>
+	<finalName>tourism</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
