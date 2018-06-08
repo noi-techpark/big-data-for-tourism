@@ -17,10 +17,5 @@ pipeline {
                sh 'mvn clean test'
             }
         }
-        stage('Cleanup') {
-            steps {
-               sh 'git clean'
-            }
-        }
     }
 }
