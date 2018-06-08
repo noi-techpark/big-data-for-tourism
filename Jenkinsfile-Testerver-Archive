@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+
+    environment {
+        APPLICATION_PROPERTIES = credentials('bigdatafortourism-application.properties')
+        MAIL_PROPERTIES = credentials('bigdatafortourism-mailconfig.properties')	
+    }
+    stages {
+        stage('Configure') {
+            steps {
+               sh 'cat "${APPLICATION_PROPERTIES}" > src/main/resources/application.properties'
+               sh 'cat "${MAIL_PROPERTIES}" > src/main/resources/simplejavamail.properties'
+            }
+        }
+        stage('Build') {
+            steps {
+               sh 'mvn clean package'
+            }
+        }
+        stage('Archive') {
+            steps {
+               sh 'cp target/tourism.war /var/builds/test-server'
+            }
+        }
+    }
+}
