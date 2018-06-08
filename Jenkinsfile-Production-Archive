@@ -19,7 +19,7 @@ pipeline {
         }
         stage('Archive') {
             steps {
-               sh 'cp target/tourism.war /var/builds/production-server-ws/'
+               sh 'cp target/tourism.war /var/builds/prod-server-ws/'
             }
         }
     }
