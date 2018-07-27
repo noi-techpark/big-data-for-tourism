@@ -4,6 +4,7 @@ pipeline {
     environment {
         APPLICATION_PROPERTIES = credentials('bigdatafortourism-application.properties')
         MAIL_PROPERTIES = credentials('bigdatafortourism-mailconfig.properties')	
+        TESTSERVER_TOMCAT_ENDPOINT=credentials('testserver-tomcat8-url')
     }
     stages {
         stage('Configure') {
