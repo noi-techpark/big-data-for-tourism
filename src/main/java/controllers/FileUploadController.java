@@ -1,25 +1,18 @@
 package controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import controllers.domainmodel.UserRepository;
 import controllers.storage.StorageFileNotFoundException;
 import controllers.storage.StorageService;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.RandomStringUtils;
 import org.elasticsearch.action.bulk.byscroll.BulkByScrollResponse;
-import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.filters.Filters;
-import org.elasticsearch.search.aggregations.bucket.filters.FiltersAggregator;
 import org.elasticsearch.search.aggregations.bucket.filter.Filter;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
@@ -27,14 +20,11 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.simplejavamail.email.Email;
 import org.simplejavamail.mailer.Mailer;
-import org.simplejavamail.mailer.config.ServerConfig;
-import org.simplejavamail.mailer.config.TransportStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
@@ -51,6 +41,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -88,9 +79,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.mail.Message;
 import javax.servlet.http.HttpServletRequest;
-
-import org.elasticsearch.search.SearchHit;
-import org.springframework.web.servlet.view.RedirectView;
+import javax.servlet.http.HttpServletResponse;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
@@ -108,11 +97,13 @@ public class FileUploadController {
         this.storageService = storageService;
     }
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping("/admin")
     @Secured("ROLE_ADMIN")
     public String adminArea(Model model) throws IOException {
         String indexName = env.getProperty("es.index");
-        String indexNameUserdetails = env.getProperty("es.userdetails");
 
         BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
                 .build());
@@ -147,15 +138,9 @@ public class FileUploadController {
                 log.error("could not resolve es endpoint: " + endpoint + ":" + port);
             }
 
-            SearchResponse response = transportClient.prepareSearch(indexNameUserdetails)
-                    .setSource(new SearchSourceBuilder().size(1000))
-                    .get();
-
-            if(response.getHits().getTotalHits() > 0) {
-                for (SearchHit hit :
-                        response.getHits()) {
-                    users.add(hit.getId().toString());
-                }
+            List<controllers.domainmodel.User> usersList = userRepository.findAll();
+            for (controllers.domainmodel.User user1 : usersList) {
+                users.add(user1.getUsername());
             }
 
             AggregationBuilder aggregation =
@@ -221,67 +206,26 @@ public class FileUploadController {
     public String addUsers(RedirectAttributes redirectAttributes,
                                  @RequestParam("email[]") String[] emails) {
 
-        String indexNameUserdetails = env.getProperty("es.userdetails");
+        for (String email :
+                emails) {
+            String username = UUID.randomUUID().toString().replace("-", "");
+            String password = RandomStringUtils.randomAlphabetic(20);
+            byte[] hash = stringToMD5(password);
+            String encryptedPassword = new String(Hex.encodeHex(hash));
 
-        BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
-                .build());
+            userRepository.create(username, encryptedPassword, email, "ROLE_USER", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
 
-        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
-        String cluster = env.getProperty("es.cluster");
-        String user = env.getProperty("es.user");
-
-        Settings settings = Settings.builder()
-                .put("client.transport.nodes_sampler_interval", "5s")
-                .put("client.transport.sniff", false)
-                .put("transport.tcp.compress", true)
-                .put("cluster.name", cluster)
-                .put("xpack.security.transport.ssl.enabled", enableSsl)
-                .put("request.headers.X-Found-Cluster", cluster)
-                .put("xpack.security.user", user)
-                .build();
-
-        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
-
-            String endpoint = env.getProperty("es.endpoint");
-            int port = Integer.parseInt(env.getProperty("es.port"));
+            log.info("new user: " + username);
 
             try {
-                transportClient
-                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
-            } catch (Exception e) {
-                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
+                Email simpleMail = new Email();
+                simpleMail.addRecipient("", email, Message.RecipientType.TO);
+                simpleMail.setSubject("Tourism Data Collector: Your username and password");
+                simpleMail.setText("Hi there!\n\nYour username: " + username + "\n\nYour password: " + password + "\n\nCheers");
+                new Mailer().sendMail(simpleMail);
+            } catch(Exception e) {
+                log.error(e.getMessage());
             }
-
-            for (String email :
-                    emails) {
-                String username = UUID.randomUUID().toString().replace("-", "");
-                String password = RandomStringUtils.randomAlphabetic(20);
-                byte[] hash = stringToMD5(password);
-                String encryptedPassword = new String(Hex.encodeHex(hash));
-
-                Map<String, Object> jsonMap = new HashMap<>();
-                jsonMap.put("email", email);
-                jsonMap.put("password", encryptedPassword);
-                jsonMap.put("authority", "ROLE_USER");
-                jsonMap.put("created_on", new Date());
-
-                IndexRequest indexRequest = new IndexRequest(indexNameUserdetails,"user", username)
-                        .source(jsonMap);
-                IndexResponse response = transportClient.index(indexRequest).actionGet();
-
-                log.info("new user: " + username);
-
-                try {
-                    Email simpleMail = new Email();
-                    simpleMail.addRecipient("", email, Message.RecipientType.TO);
-                    simpleMail.setSubject("Tourism Data Collector: Your username and password");
-                    simpleMail.setText("Hi there!\n\nYour username: " + username + "\n\nYour password: " + password + "\n\nCheers");
-                    new Mailer().sendMail(simpleMail);
-                } catch(Exception e) {
-                    log.error(e.getMessage());
-                }
-            }
-
         }
 
         redirectAttributes.addFlashAttribute("message", "<small>Congratulations! The user was successfully created</small><br/><br/>");
@@ -294,42 +238,9 @@ public class FileUploadController {
     public String deleteUser(RedirectAttributes redirectAttributes,
                                  @PathVariable String username) {
 
-        String indexNameUserdetails = env.getProperty("es.userdetails");
+        userRepository.delete(username);
 
-        BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
-                .build());
-
-        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
-        String cluster = env.getProperty("es.cluster");
-        String user = env.getProperty("es.user");
-
-        Settings settings = Settings.builder()
-                .put("client.transport.nodes_sampler_interval", "5s")
-                .put("client.transport.sniff", false)
-                .put("transport.tcp.compress", true)
-                .put("cluster.name", cluster)
-                .put("xpack.security.transport.ssl.enabled", enableSsl)
-                .put("request.headers.X-Found-Cluster", cluster)
-                .put("xpack.security.user", user)
-                .build();
-
-        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
-
-            String endpoint = env.getProperty("es.endpoint");
-            int port = Integer.parseInt(env.getProperty("es.port"));
-
-            try {
-                transportClient
-                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
-            } catch (Exception e) {
-                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
-            }
-
-            DeleteResponse response = transportClient.prepareDelete(indexNameUserdetails, "user", username).get();
-
-            log.info("user deleted: " + username);
-
-        }
+        log.info("user deleted: " + username);
 
         redirectAttributes.addFlashAttribute("message", "<small>Congratulations! The user was successfully deleted</small><br/><br/>");
 
@@ -341,70 +252,25 @@ public class FileUploadController {
     public String setNewPasswordForUser(RedirectAttributes redirectAttributes,
                              @PathVariable String username) {
 
-        String indexNameUserdetails = env.getProperty("es.userdetails");
+        try {
+            controllers.domainmodel.User user = userRepository.findByUsername(username);
 
-        BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
-                .build());
+            String email = user.getEmail();
+            String password = RandomStringUtils.randomAlphabetic(20);
+            byte[] hash = stringToMD5(password);
+            String encryptedPassword = new String(Hex.encodeHex(hash));
 
-        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
-        String cluster = env.getProperty("es.cluster");
-        String user = env.getProperty("es.user");
+            userRepository.updatePasswordByUsername(username, encryptedPassword);
 
-        Settings settings = Settings.builder()
-                .put("client.transport.nodes_sampler_interval", "5s")
-                .put("client.transport.sniff", false)
-                .put("transport.tcp.compress", true)
-                .put("cluster.name", cluster)
-                .put("xpack.security.transport.ssl.enabled", enableSsl)
-                .put("request.headers.X-Found-Cluster", cluster)
-                .put("xpack.security.user", user)
-                .build();
+            Email simpleMail = new Email();
+            simpleMail.addRecipient("", email, Message.RecipientType.TO);
+            simpleMail.setSubject("Tourism Data Collector: Your new password");
+            simpleMail.setText("Hi there!\n\nYour username: " + username + "\n\nYour password: " + password + "\n\nCheers");
+            new Mailer().sendMail(simpleMail);
 
-        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
-
-            String endpoint = env.getProperty("es.endpoint");
-            int port = Integer.parseInt(env.getProperty("es.port"));
-
-            try {
-                transportClient
-                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
-            } catch (Exception e) {
-                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
-            }
-
-            SearchResponse response = transportClient.prepareSearch(indexNameUserdetails)
-                    .setSource(new SearchSourceBuilder().size(1).query(QueryBuilders.termQuery("_id", username)))
-                    .get();
-
-            if(response.getHits().getTotalHits() > 0) {
-                String email = response.getHits().getAt(0).getSource().get("email").toString();
-                String password = RandomStringUtils.randomAlphabetic(20);
-                byte[] hash = stringToMD5(password);
-                String encryptedPassword = new String(Hex.encodeHex(hash));
-
-                try {
-                    UpdateRequest updateRequest = new UpdateRequest();
-                    updateRequest.index(indexNameUserdetails);
-                    updateRequest.type("user");
-                    updateRequest.id(username);
-                    updateRequest.doc(jsonBuilder()
-                            .startObject()
-                            .field("password", encryptedPassword)
-                            .endObject());
-                    transportClient.update(updateRequest).get();
-
-                    Email simpleMail = new Email();
-                    simpleMail.addRecipient("", email, Message.RecipientType.TO);
-                    simpleMail.setSubject("Tourism Data Collector: Your new password");
-                    simpleMail.setText("Hi there!\n\nYour username: " + username + "\n\nYour password: " + password + "\n\nCheers");
-                    new Mailer().sendMail(simpleMail);
-
-                    log.info("set a new password for: " + username);
-                } catch (Exception e) {
-                    log.error(e.getMessage());
-                }
-            }
-
+            log.info("set a new password for: " + username);
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
 
         redirectAttributes.addFlashAttribute("message", "<small>Yay! A new password has been sent to " + username + "</small><br/><br/>");
@@ -419,55 +285,18 @@ public class FileUploadController {
                              @PathVariable int year,
                              @PathVariable int month) {
 
-        String indexNameUserdetails = env.getProperty("es.userdetails");
+        controllers.domainmodel.User user = userRepository.findByUsername(username);
 
-        BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
-                .build());
+        String email = user.getEmail();
+        String shortMonth = new DateFormatSymbols(new Locale("en", "GB")).getShortMonths()[month - 1];
 
-        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
-        String cluster = env.getProperty("es.cluster");
-        String user = env.getProperty("es.user");
+        Email simpleMail = new Email();
+        simpleMail.addRecipient("", email, Message.RecipientType.TO);
+        simpleMail.setSubject("Tourism Data Collector: Missing data for " + year + "/" + shortMonth);
+        simpleMail.setText("Hi!\n\nPlease upload your data for " + year + "/" + shortMonth + "!\n\nCheers");
+        new Mailer().sendMail(simpleMail);
 
-        Settings settings = Settings.builder()
-                .put("client.transport.nodes_sampler_interval", "5s")
-                .put("client.transport.sniff", false)
-                .put("transport.tcp.compress", true)
-                .put("cluster.name", cluster)
-                .put("xpack.security.transport.ssl.enabled", enableSsl)
-                .put("request.headers.X-Found-Cluster", cluster)
-                .put("xpack.security.user", user)
-                .build();
-
-        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
-
-            String endpoint = env.getProperty("es.endpoint");
-            int port = Integer.parseInt(env.getProperty("es.port"));
-
-            try {
-                transportClient
-                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
-            } catch (Exception e) {
-                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
-            }
-
-            SearchResponse response = transportClient.prepareSearch(indexNameUserdetails)
-                    .setSource(new SearchSourceBuilder().size(1).query(QueryBuilders.termQuery("_id", username)))
-                    .get();
-
-            if(response.getHits().getTotalHits() > 0) {
-                String email = response.getHits().getAt(0).getSource().get("email").toString();
-                String shortMonth = new DateFormatSymbols(new Locale("en", "GB")).getShortMonths()[month - 1];
-
-                Email simpleMail = new Email();
-                simpleMail.addRecipient("", email, Message.RecipientType.TO);
-                simpleMail.setSubject("Tourism Data Collector: Missing data for " + year + "/" + shortMonth);
-                simpleMail.setText("Hi!\n\nPlease upload your data for " + year + "/" + shortMonth + "!\n\nCheers");
-                new Mailer().sendMail(simpleMail);
-
-                log.info("notify " + username + " for missing data");
-            }
-
-        }
+        log.info("notify " + username + " for missing data");
 
         redirectAttributes.addFlashAttribute("message", "<small>The user " + username + " has been informed about missing data</small><br/><br/>");
 
@@ -913,6 +742,40 @@ public class FileUploadController {
     @ExceptionHandler(StorageFileNotFoundException.class)
     public ResponseEntity handleStorageFileNotFound(StorageFileNotFoundException exc) {
         return ResponseEntity.notFound().build();
+    }
+
+    @RequestMapping(value = "/lost", method = RequestMethod.GET)
+    public String lostForm() throws IOException {
+        return "lost";
+    }
+
+    @RequestMapping(value = "/lost", method = RequestMethod.POST)
+    public String resetPassword(RedirectAttributes redirectAttributes,
+                           @RequestParam("email") String email) {
+        try {
+            controllers.domainmodel.User user = userRepository.findByEmail(email);
+
+            String username = user.getUsername();
+            String password = RandomStringUtils.randomAlphabetic(20);
+            byte[] hash = stringToMD5(password);
+            String encryptedPassword = new String(Hex.encodeHex(hash));
+
+            userRepository.updatePasswordByUsername(username, encryptedPassword);
+
+            Email simpleMail = new Email();
+            simpleMail.addRecipient("", email, Message.RecipientType.TO);
+            simpleMail.setSubject("Tourism Data Collector: Your new password");
+            simpleMail.setText("Hi there!\n\nYour username: " + username + "\n\nYour password: " + password + "\n\nCheers");
+            new Mailer().sendMail(simpleMail);
+
+            log.info("set a new password for: " + username);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+
+        redirectAttributes.addFlashAttribute("message", "<small>Yay! A new password has been sent to you</small><br/><br/>");
+
+        return "redirect:/lost";
     }
 
 }

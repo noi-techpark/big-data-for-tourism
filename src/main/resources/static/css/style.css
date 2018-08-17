@@ -219,3 +219,8 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+.page-logout {
+    text-align: right;
+    padding: 1em;
+    line-height: 1;
+}
