@@ -9,12 +9,13 @@ An Elasticsearch CSV importer written in Java 1.8 using Maven for the build.
 
 ## Sample CSV File
 
-Imagine we have list of enquiries/bookings in a CSV file with following columns: arrival, departure, country, adults, children, destination, category, booking, cancellation and submitted on. The columns are separated by ``,`` as column delimiter, which each line will be split at:
-
 ```
-"2015-01-01","2015-01-03","","2","0","21027","1","1","0","2015-01-01T01:59:00"
-"2015-07-03","2015-07-04","","2","0","21008","1","1","0","2015-01-01 11:27:00"
-"2015-07-05","2015-07-07","","2","0","21027","1","0","0","2015-01-01 13:33:00"
+"arrival","departure","country","adults","children","destination","category","booking","cancellation","submitted_on","cancelled_on"
+"2015-01-01","2015-01-03","","2","0","21027","1","1","0","2015-01-01T01:59:00",""
+"2015-07-03","2015-07-04","","2","0","21008","1","1","0","2015-01-01 11:27:00",""
+"2015-07-05","2015-07-07","","2","0","21027","1","0","0","2015-01-01 13:33:00",""
+"2015-08-01","2015-08-05","","3","0","21027","1","0","0","2015-04-01 12:00:00",""
+"2015-08-01","2015-08-05","","3","0","21027","1","0","0","2015-04-01 12:00:00","2015-04-01 14:00:00"
 ```
 
 ## What you will need
