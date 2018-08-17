@@ -30,7 +30,6 @@
       <div class="custom-file-upload">
   			<input type="file" id="file" name="file"/>
   		</div>
-  		<input class="button button2" type="text" name="email" placeholder="Email address (file upload notification)"/>
       <input class="button" type="submit" value="Upload"/>
       <div>
           <br/>
@@ -60,6 +59,30 @@
 						<td width="50%" th:text="'Dataset ' + ${iterStat.count}">Dataset</td>
 						<td width="30%" align="center" th:text="${uniqueKey.value}">LocalDateTime</td>
 						<td width="20%" align="center"><a th:href="@{/delete/{uniqueKey}(uniqueKey=${uniqueKey.key})}" onclick="return confirm('Are you sure to delete this set?')">Delete set</a></td>
+					</tr>
+				</th:block>
+			</table>
+		</div>
+
+	</div>
+
+	<div th:if="${#lists.size(files)}">
+
+		<br/>
+
+		<div class="page-content">
+			Files overview<br/><br/>
+		</div>
+
+		<div class="page-content">
+			<table class="table" width="579" align="center">
+				<th:block th:each="file : ${files}">
+					<tr>
+						<td width="20%" th:text="${file.get('filename')}">filename</td>
+						<td width="20%" align="center" th:text="${file.get('firstDate')}">firstDate</td>
+						<td width="20%" align="center" th:text="${file.get('lastDate')}">lastDate</td>
+						<td width="20%" align="center" th:text="${file.get('uploadedDate')}">uploadedDate</td>
+						<td width="20%" align="center"><a th:href="@{/del/{filename}(filename=${file.get('filename')})}" onclick="return confirm('Are you sure to delete this set?')">Delete set</a></td>
 					</tr>
 				</th:block>
 			</table>
