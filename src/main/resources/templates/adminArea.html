@@ -79,8 +79,8 @@
 									<td th:text="${username.key}">User</td>
 									<th:block th:each="month: ${#numbers.sequence(1,12)}">
 										<td align="center">
-											<span th:if="${aggs.get('__${username.key}__').contains('__${year}__-__${month}__')}" th:text="Y"></span>
-											<span th:if="${not aggs.get('__${username.key}__').contains('__${year}__-__${month}__')}"><a th:href="@{/admin/notifyUser/{username}/{year}/{month}(username=${username.key},year=${year},month=${month})}" onclick="return confirm('Are you sure to notify the user?')">N</a></span>
+											<span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} == 1" th:text="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')}">0</span>
+											<span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} != 1"><a th:href="@{/admin/notifyUser/{username}/{year}/{month}(username=${username.key},year=${year},month=${month})}" onclick="return confirm('Are you sure to notify the user?')">0</a></span>
 										</td>
 									</th:block>
 								</tr>

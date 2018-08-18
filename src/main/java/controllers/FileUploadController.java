@@ -106,6 +106,19 @@ public class FileUploadController {
     @GetMapping("/admin")
     @Secured("ROLE_ADMIN")
     public String adminArea(Model model) throws IOException {
+        ArrayList<String> users = new ArrayList<String>();
+
+        List<controllers.domainmodel.User> usersList = userRepository.findAll();
+        for (controllers.domainmodel.User user1 : usersList) {
+            users.add(user1.getUsername());
+        }
+
+        this.usersActivity(model, users);
+
+        return "adminArea";
+    }
+
+    private void usersActivity(Model model, ArrayList<String> users) {
         String indexName = env.getProperty("es.index");
 
         BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
@@ -125,9 +138,8 @@ public class FileUploadController {
                 .put("xpack.security.user", user)
                 .build();
 
-        int maxYear = 0;
-        ArrayList<String> users = new ArrayList<String>();
-        Map<String, ArrayList<String>> aggs = new HashMap<String, ArrayList<String>>();
+        int maxYear = 0; // Calendar.getInstance().get(Calendar.YEAR);
+        Map<String, Map<String, String>> aggs = new HashMap<String, Map<String, String>>();
 
         try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
 
@@ -141,11 +153,6 @@ public class FileUploadController {
                 log.error("could not resolve es endpoint: " + endpoint + ":" + port);
             }
 
-            List<controllers.domainmodel.User> usersList = userRepository.findAll();
-            for (controllers.domainmodel.User user1 : usersList) {
-                users.add(user1.getUsername());
-            }
-
             AggregationBuilder aggregation =
                     AggregationBuilders
                             .terms("aggs")
@@ -154,12 +161,13 @@ public class FileUploadController {
             AggregationBuilder aggregation2 =
                     AggregationBuilders
                             .dateHistogram("aggs2")
-                            .field("arrival")
+                            .field("submitted_on")
                             .dateHistogramInterval(DateHistogramInterval.MONTH)
                             .format("yyyy-MM");
 
             SearchResponse response2 = transportClient.prepareSearch(indexName)
                     .setSource(new SearchSourceBuilder().size(0))
+                    //.setQuery(QueryBuilders.termsQuery("user", users))
                     .addAggregation(aggregation.subAggregation(aggregation2))
                     .get();
 
@@ -168,7 +176,7 @@ public class FileUploadController {
             for (Terms.Bucket entry : agg.getBuckets()) {
                 String username = entry.getKey().toString();
 
-                ArrayList<String> keys = new ArrayList<String>();
+                Map<String, String> keys = new HashMap<>();
 
                 Histogram agg2 = entry.getAggregations().get("aggs2");
                 for (Histogram.Bucket entry2 : agg2.getBuckets()) {
@@ -179,14 +187,20 @@ public class FileUploadController {
                     int month = Integer.parseInt(parts[1]);
                     String formattedKey = year + "-" + month;
 
-                    keys.add(formattedKey);
+                    keys.put(formattedKey, Long.toString(entry2.getDocCount()));
 
                     if (year > maxYear) {
                         maxYear = year;
                     }
                 }
 
-                aggs.put(username, keys);
+                if (1 == users.size()) {
+                    if (users.contains(username)) {
+                        aggs.put(username, keys);
+                    }
+                } else {
+                    aggs.put(username, keys);
+                }
             }
 
         }
@@ -200,8 +214,6 @@ public class FileUploadController {
         model.addAttribute("aggs", aggs);
         model.addAttribute("maxYear", maxYear);
         model.addAttribute("shortMonths", months);
-
-        return "adminArea";
     }
 
     @RequestMapping(value = "/addUsers", method = RequestMethod.POST)
@@ -387,13 +399,17 @@ public class FileUploadController {
 
         String username = ((User) principal).getUsername();
 
-        // @TODO: Riassunto dei caricamenti (numero di richieste, prenotazioni e storni per ogni mese) for Admin & User
         try {
             List<Map<String, String>> files = storageService.loadAll("/new/" + username);
             model.addAttribute("files", files);
         } catch(Exception e) {
             log.info(e.getMessage());
         }
+
+        ArrayList<String> users = new ArrayList<String>();
+        users.add(username);
+
+        this.usersActivity(model, users);
 
         return "uploadForm";
     }

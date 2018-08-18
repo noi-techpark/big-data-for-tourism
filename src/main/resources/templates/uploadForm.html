@@ -68,6 +68,45 @@
 
 	</div>
 
+    <div>
+
+        <br/>
+
+        <div class="page-content">
+            Users activity<br/><br/>
+        </div>
+
+        <div class="page-content">
+            <table class="table" width="579" align="center" th:each="year: ${#numbers.sequence(2015,maxYear)}">
+                <tr>
+                    <td>
+                        <h2 th:text="${year}">Year</h2>
+                        <table width="100%">
+                            <thead>
+                            <tr>
+                                <th:block th:each="month: ${#numbers.sequence(0,11)}">
+                                    <td align="center" th:text="${shortMonths[month]}">Month</td>
+                                </th:block>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="username : ${aggs}">
+                                <th:block th:each="month: ${#numbers.sequence(1,12)}">
+                                    <td align="center">
+                                        <span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} == 1" th:text="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')}">0</span>
+                                        <span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} != 1">0</span>
+                                    </td>
+                                </th:block>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+
     <br clear="all"/>
 
 	<div class="page-content">
