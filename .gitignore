@@ -37,6 +37,9 @@ overridedb.*
 dump.rdb
 transaction-logs
 log
+upload-dir
+application-*.properties
+tourism-collector.db
 
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 !/.mvn/wrapper/maven-wrapper.jar
