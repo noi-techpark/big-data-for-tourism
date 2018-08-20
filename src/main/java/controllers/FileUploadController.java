@@ -13,7 +13,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.filter.Filter;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
@@ -24,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,40 +31,18 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.regex.MatchResult;
-import java.util.stream.Collectors;
 
-import converter.EnquiryDataConverter;
-import csv.mapping.EnquiryMapping;
-import csv.model.EnquiryData;
-import de.bytefish.elasticutils.elasticsearch5.client.ElasticSearchClient;
 import de.bytefish.elasticutils.elasticsearch5.client.bulk.configuration.BulkProcessorConfiguration;
 import de.bytefish.elasticutils.elasticsearch5.client.bulk.options.BulkProcessingOptions;
-import de.bytefish.jtinycsvparser.CsvParser;
-import de.bytefish.jtinycsvparser.CsvParserOptions;
-import de.bytefish.jtinycsvparser.CsvReaderOptions;
-import de.bytefish.jtinycsvparser.mapping.CsvMappingResult;
-import de.bytefish.jtinycsvparser.tokenizer.rfc4180.Options;
-import de.bytefish.jtinycsvparser.tokenizer.rfc4180.RFC4180Tokenizer;
-import elastic.mapping.EnquiryDataMapper;
-import elastic.model.Enquiry;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -74,17 +50,11 @@ import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 
 import java.io.*;
 import java.net.InetAddress;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.mail.Message;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 @Controller
 public class FileUploadController {
