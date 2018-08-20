@@ -1,11 +1,12 @@
 # Tourism data collector
 
-An Elasticsearch CSV importer written in Java 1.8 using Maven for the build.
+An Elasticsearch CSV file manager written in Java 1.8 using Maven for the build.
 
 ## Features
 
-* Import any text file using [JTinyCsvParser](https://github.com/bytefish/JTinyCsvParser)
 * Uses the [ElasticUtils](https://github.com/bytefish/ElasticUtils) library for working with Elasticsearch 5
+* Files get processed by [Apache NiFi](https://nifi.apache.org)
+* [SQLite database](https://www.sqlite.org) for user management
 
 ## Sample CSV File
 
@@ -37,6 +38,9 @@ If all goes well, you should be presented with some information about the Maven 
 Now you are ready to configure the application by opening the [application.properties](src/main/resources/application.properties) file:
 
 ```
+spring.http.multipart.max-file-size=1024MB
+spring.http.multipart.max-request-size=1024MB
+
 # ===============================
 # = HTTP AUTHENTICATION
 # ===============================
@@ -60,6 +64,17 @@ es.type=index-type
 es.cluster=cluster
 es.user=username:password
 es.userdetails=index-userdetails
+
+# ===============================
+# = DB SETTINGS
+# ===============================
+
+spring.datasource.driverClassName=org.sqlite.JDBC
+spring.datasource.url=jdbc:sqlite:tourism-collector.db
+spring.datasource.username=
+spring.datasource.password=
+
+spring.profiles.active=@activatedProperties@
 ```
 
 Last but not least, setup your smtp mail server [simplejavamail.properties](src/main/resources/simplejavamail.properties):
@@ -100,32 +115,6 @@ You can now take a look in the ${basedir}/target directory and you will see the 
 ## Elasticsearch Indices
 
 ```json
-PUT /index-userdetails
-{
-  "mappings": {
-    "user": {
-      "_all": {
-        "enabled": false
-      },
-      "properties": {
-        "email": {
-          "type": "keyword"
-        },
-        "password": {
-          "type": "keyword"
-        },
-        "authority": {
-          "type": "keyword"
-        },
-        "created_on": {
-          "type": "date",
-          "format": "epoch_millis||date||date_time"
-        }
-      }
-    }
-  }
-}
-
 PUT /index
 {
   "mappings": {
@@ -191,6 +180,10 @@ PUT /index
           "type": "boolean"
         },
         "submitted_on": {
+          "type": "date",
+          "format": "epoch_millis||date_hour_minute_second"
+        },
+        "cancelled_on": {
           "type": "date",
           "format": "epoch_millis||date_hour_minute_second"
         },
