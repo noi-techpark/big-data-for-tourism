@@ -369,12 +369,13 @@ public class FileUploadController {
 
         String username = ((User) principal).getUsername();
 
+        List<Map<String, String>> files = new ArrayList<Map<String, String>>();
         try {
-            List<Map<String, String>> files = storageService.loadAll("/new/" + username);
-            model.addAttribute("files", files);
+            files = storageService.loadAll("/new/" + username);
         } catch(Exception e) {
             log.info(e.getMessage());
         }
+        model.addAttribute("files", files);
 
         ArrayList<String> users = new ArrayList<String>();
         users.add(username);

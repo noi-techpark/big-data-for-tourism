@@ -174,6 +174,14 @@ public class FileSystemStorageService implements StorageService {
             if (!Files.exists(rootLocation)) {
                 Files.createDirectory(rootLocation);
             }
+            Path pathNew = Paths.get(this.rootLocation.toString() + "/new");
+            if (!Files.exists(pathNew)) {
+                Files.createDirectory(pathNew);
+            }
+            Path pathDelete = Paths.get(this.rootLocation.toString() + "/delete");
+            if (!Files.exists(pathDelete)) {
+                Files.createDirectory(pathDelete);
+            }
         } catch (IOException e) {
             throw new StorageException("Could not initialize storage", e);
         }
