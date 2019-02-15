@@ -7,8 +7,9 @@ import controllers.storage.StorageFileNotFoundException;
 import controllers.storage.StorageService;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.RandomStringUtils;
-import org.elasticsearch.action.bulk.byscroll.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
@@ -41,11 +42,10 @@ import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import de.bytefish.elasticutils.elasticsearch5.client.bulk.configuration.BulkProcessorConfiguration;
-import de.bytefish.elasticutils.elasticsearch5.client.bulk.options.BulkProcessingOptions;
+import de.bytefish.elasticutils.elasticsearch6.client.bulk.configuration.BulkProcessorConfiguration;
+import de.bytefish.elasticutils.elasticsearch6.client.bulk.options.BulkProcessingOptions;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 
 import java.io.*;
@@ -118,7 +118,7 @@ public class FileUploadController {
 
             try {
                 transportClient
-                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
+                        .addTransportAddress(new TransportAddress(InetAddress.getByName(endpoint), port));
             } catch (Exception e) {
                 log.error("could not resolve es endpoint: " + endpoint + ":" + port);
             }
@@ -303,7 +303,7 @@ public class FileUploadController {
         return hash;
     }
 
-    @GetMapping("/delete/{uniqueKey:.+}")
+    /*@GetMapping("/delete/{uniqueKey:.+}")
     public String deleteUploadedFiles(@PathVariable String uniqueKey, RedirectAttributes redirectAttributes) throws IOException {
         long deleted = 0;
 
@@ -329,7 +329,7 @@ public class FileUploadController {
 
             try {
                 transportClient
-                        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(endpoint), port));
+                        .addTransportAddress(new TransportAddress(InetAddress.getByName(endpoint), port));
             } catch (Exception e) {
                 log.error("could not resolve es endpoint: " + endpoint + ":" + port);
             }
@@ -348,7 +348,7 @@ public class FileUploadController {
         redirectAttributes.addFlashAttribute("message", "<small>Dataset was successfully deleted (" + deleted + " rows).</small><br/><br/>");
 
         return "redirect:/";
-    }
+    }*/
 
     @GetMapping("/del/{filename:.+}")
     public String deleteUploadedFile(@PathVariable String filename, RedirectAttributes redirectAttributes) throws IOException {
@@ -356,7 +356,7 @@ public class FileUploadController {
 
         String username = ((User) principal).getUsername();
 
-        storageService.move("/new/" + username + "/" + filename, "/delete/" + username);
+        storageService.move("/processed/new/" + username + "/" + filename, "/delete/" + username);
 
         redirectAttributes.addFlashAttribute("message", "<small>Dataset was successfully deleted.</small><br/><br/>");
 
@@ -371,7 +371,7 @@ public class FileUploadController {
 
         List<Map<String, String>> files = new ArrayList<Map<String, String>>();
         try {
-            files = storageService.loadAll("/new/" + username);
+            files = storageService.loadAll("/processed/new/" + username);
         } catch(Exception e) {
             log.info(e.getMessage());
         }
@@ -385,14 +385,14 @@ public class FileUploadController {
         return "uploadForm";
     }
 
-    @GetMapping("/files/{filename:.+}")
+    /*@GetMapping("/files/{filename:.+}")
     @ResponseBody
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
 
         Resource file = storageService.loadAsResource(filename);
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + file.getFilename() + "\"").body(file);
-    }
+    }*/
 
     @RequestMapping(value = "/", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody

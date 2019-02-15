@@ -4,7 +4,7 @@ An Elasticsearch CSV file manager written in Java 1.8 using Maven for the build.
 
 ## Features
 
-* Uses the [ElasticUtils](https://github.com/bytefish/ElasticUtils) library for working with Elasticsearch 5
+* Uses the [ElasticUtils](https://github.com/bytefish/ElasticUtils) library for working with Elasticsearch 6
 * Files get processed by [Apache NiFi](https://nifi.apache.org)
 * [SQLite database](https://www.sqlite.org) for user management
 
@@ -73,6 +73,17 @@ spring.datasource.driverClassName=org.sqlite.JDBC
 spring.datasource.url=jdbc:sqlite:tourism-collector.db
 spring.datasource.username=
 spring.datasource.password=
+
+# ===============================
+# = SFTP SETTINGS
+# ===============================
+
+sftp.host=hostname
+sftp.username=username
+sftp.password=password
+sftp.dir=path-to-upload-directory
+sftp.key=path-to-key
+sftp.passphrase=passphrase
 
 spring.profiles.active=@activatedProperties@
 ```

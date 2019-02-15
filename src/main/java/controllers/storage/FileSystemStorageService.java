@@ -28,7 +28,7 @@ public class FileSystemStorageService implements StorageService {
         this.rootLocation = Paths.get(properties.getLocation());
     }
 
-    @Override
+    /*@Override
     public void store(MultipartFile file) {
         try {
             if (file.isEmpty()) {
@@ -39,7 +39,7 @@ public class FileSystemStorageService implements StorageService {
         } catch (IOException e) {
             throw new StorageException("Failed to store file " + file.getOriginalFilename(), e);
         }
-    }
+    }*/
 
     @Override
     public void store(MultipartFile file, String location) {
@@ -84,7 +84,7 @@ public class FileSystemStorageService implements StorageService {
         }
     }
 
-    @Override
+    /*@Override
     public Stream<Path> loadAll() {
         try {
             return Files.walk(this.rootLocation, 1)
@@ -94,7 +94,7 @@ public class FileSystemStorageService implements StorageService {
             throw new StorageException("Failed to read stored files", e);
         }
 
-    }
+    }*/
 
     @Override
     public List<Map<String, String>> loadAll(String location) {
@@ -141,12 +141,12 @@ public class FileSystemStorageService implements StorageService {
 
     }
 
-    @Override
+    /*@Override
     public Path load(String filename) {
         return rootLocation.resolve(filename);
-    }
+    }*/
 
-    @Override
+    /*@Override
     public Resource loadAsResource(String filename) {
         try {
             Path file = load(filename);
@@ -161,12 +161,12 @@ public class FileSystemStorageService implements StorageService {
         } catch (MalformedURLException e) {
             throw new StorageFileNotFoundException("Could not read file: " + filename, e);
         }
-    }
+    }*/
 
-    @Override
+    /*@Override
     public void deleteAll() {
         FileSystemUtils.deleteRecursively(rootLocation.toFile());
-    }
+    }*/
 
     @Override
     public void init() {

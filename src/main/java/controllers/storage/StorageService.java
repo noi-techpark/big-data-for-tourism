@@ -12,20 +12,20 @@ public interface StorageService {
 
     void init();
 
-    void store(MultipartFile file);
+    //void store(MultipartFile file);
 
     void store(MultipartFile file, String location);
 
     void move(String filename, String location);
 
-    Stream<Path> loadAll();
+    //Stream<Path> loadAll();
 
     List<Map<String, String>> loadAll(String location);
 
-    Path load(String filename);
+    //Path load(String filename);
 
-    Resource loadAsResource(String filename);
+    //Resource loadAsResource(String filename);
 
-    void deleteAll();
+    //void deleteAll();
 
 }
