@@ -1,34 +1,23 @@
 package controllers.storage;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.commons.vfs2.*;
-import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
-import org.apache.commons.vfs2.impl.DefaultFileSystemConfigBuilder;
-import org.apache.commons.vfs2.provider.local.LocalFile;
 import org.apache.commons.vfs2.provider.sftp.IdentityInfo;
 import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 @Service
 @Primary
@@ -114,7 +103,7 @@ public class FtpStorageService implements StorageService {
 
     @Override
     public List<Map<String, String>> loadAll(String location) {
-        List<Map<String, String>> list  = new ArrayList<Map<String, String>>();
+        List<Map<String, String>> list  = new ArrayList<>();
 
         String startPath;
         if (keyPath != null) {
@@ -134,7 +123,7 @@ public class FtpStorageService implements StorageService {
             FileObject[] children = sftpFile.getChildren();
             for (FileObject f : children) {
                 if (f.getType() == FileType.FILE) {
-                    Map<String, String> file = new HashMap<String, String>();
+                    Map<String, String> file = new HashMap<>();
                     file.put("filename", f.getName().getBaseName());
                     file.put("firstDate", "N/A"); // @deprecated
                     file.put("lastDate", "N/A"); // @deprecated
@@ -176,7 +165,7 @@ public class FtpStorageService implements StorageService {
             throw new StorageException("setUserAuthenticator failed", e);
         }
 
-        IdentityInfo identityInfo = null;
+        IdentityInfo identityInfo;
         if (passPhrase != null) {
             identityInfo = new IdentityInfo(new File(keyPath), passPhrase.getBytes());
         } else {

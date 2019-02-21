@@ -28,19 +28,6 @@ public class FileSystemStorageService implements StorageService {
         this.rootLocation = Paths.get(properties.getLocation());
     }
 
-    /*@Override
-    public void store(MultipartFile file) {
-        try {
-            if (file.isEmpty()) {
-                throw new StorageException("Failed to store empty file " + file.getOriginalFilename());
-            }
-            Path target = this.rootLocation.resolve(file.getOriginalFilename());
-            Files.copy(file.getInputStream(), target);
-        } catch (IOException e) {
-            throw new StorageException("Failed to store file " + file.getOriginalFilename(), e);
-        }
-    }*/
-
     @Override
     public void store(MultipartFile file, String location) {
         try {
@@ -84,28 +71,16 @@ public class FileSystemStorageService implements StorageService {
         }
     }
 
-    /*@Override
-    public Stream<Path> loadAll() {
-        try {
-            return Files.walk(this.rootLocation, 1)
-                    .filter(path -> !path.equals(this.rootLocation))
-                    .map(path -> this.rootLocation.relativize(path));
-        } catch (IOException e) {
-            throw new StorageException("Failed to read stored files", e);
-        }
-
-    }*/
-
     @Override
     public List<Map<String, String>> loadAll(String location) {
-        List<Map<String, String>> list  = new ArrayList<Map<String, String>>();
+        List<Map<String, String>> list  = new ArrayList<>();
         String cvsSplitBy = ",";
         try {
             String directories = this.rootLocation.toString() + location;
             Path pathLocation = Paths.get(directories);
             Files.walk(pathLocation, 1)
                     .filter(path -> !path.equals(pathLocation)).forEach(path -> {
-                Map<String, String> file = new HashMap<String, String>();
+                Map<String, String> file = new HashMap<>();
                 file.put("filename", path.getFileName().toString());
 
                 file.put("firstDate", "");
@@ -114,7 +89,9 @@ public class FileSystemStorageService implements StorageService {
                     String text = br.readLine();
                     String[] line = text.split(cvsSplitBy);
                     file.put("firstDate", line[0]);
-                } catch (Exception e) { }
+                } catch (Exception e) {
+                    throw new StorageException("Failed to read firstDate", e);
+                }
 
                 file.put("lastDate", "");
                 try {
@@ -122,7 +99,9 @@ public class FileSystemStorageService implements StorageService {
                     String text = fr.readLine();
                     String[] line = text.split(cvsSplitBy);
                     file.put("lastDate", line[0]);
-                } catch (Exception e) { }
+                } catch (Exception e) {
+                    throw new StorageException("Failed to read lastDate", e);
+                }
 
                 BasicFileAttributes attr;
                 try {
@@ -140,33 +119,6 @@ public class FileSystemStorageService implements StorageService {
         return list;
 
     }
-
-    /*@Override
-    public Path load(String filename) {
-        return rootLocation.resolve(filename);
-    }*/
-
-    /*@Override
-    public Resource loadAsResource(String filename) {
-        try {
-            Path file = load(filename);
-            Resource resource = new UrlResource(file.toUri());
-            if(resource.exists() || resource.isReadable()) {
-                return resource;
-            }
-            else {
-                throw new StorageFileNotFoundException("Could not read file: " + filename);
-
-            }
-        } catch (MalformedURLException e) {
-            throw new StorageFileNotFoundException("Could not read file: " + filename, e);
-        }
-    }*/
-
-    /*@Override
-    public void deleteAll() {
-        FileSystemUtils.deleteRecursively(rootLocation.toFile());
-    }*/
 
     @Override
     public void init() {

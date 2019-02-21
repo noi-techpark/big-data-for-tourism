@@ -7,23 +7,23 @@ import controllers.storage.StorageFileNotFoundException;
 import controllers.storage.StorageService;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.RandomStringUtils;
-import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import org.simplejavamail.email.Email;
 import org.simplejavamail.mailer.Mailer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,6 +34,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.mail.Message;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -41,20 +46,6 @@ import java.security.NoSuchAlgorithmException;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-import de.bytefish.elasticutils.elasticsearch6.client.bulk.configuration.BulkProcessorConfiguration;
-import de.bytefish.elasticutils.elasticsearch6.client.bulk.options.BulkProcessingOptions;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
-
-import java.io.*;
-import java.net.InetAddress;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.mail.Message;
 
 @Controller
 public class FileUploadController {
@@ -75,8 +66,8 @@ public class FileUploadController {
 
     @GetMapping("/admin")
     @Secured("ROLE_ADMIN")
-    public String adminArea(Model model) throws IOException {
-        ArrayList<String> users = new ArrayList<String>();
+    public String adminArea(Model model) {
+        ArrayList<String> users = new ArrayList<>();
 
         List<controllers.domainmodel.User> usersList = userRepository.findAll();
         for (controllers.domainmodel.User user1 : usersList) {
@@ -90,9 +81,6 @@ public class FileUploadController {
 
     private void usersActivity(Model model, ArrayList<String> users) {
         String indexName = env.getProperty("es.index");
-
-        BulkProcessorConfiguration bulkConfiguration = new BulkProcessorConfiguration(BulkProcessingOptions.builder()
-                .build());
 
         boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
         String cluster = env.getProperty("es.cluster");
@@ -108,8 +96,8 @@ public class FileUploadController {
                 .put("xpack.security.user", user)
                 .build();
 
-        int maxYear = 0; // Calendar.getInstance().get(Calendar.YEAR);
-        Map<String, Map<String, String>> aggs = new HashMap<String, Map<String, String>>();
+        int maxYear = 0;
+        Map<String, Map<String, String>> aggs = new HashMap<>();
 
         try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
 
@@ -137,7 +125,6 @@ public class FileUploadController {
 
             SearchResponse response2 = transportClient.prepareSearch(indexName)
                     .setSource(new SearchSourceBuilder().size(0))
-                    //.setQuery(QueryBuilders.termsQuery("user", users))
                     .addAggregation(aggregation.subAggregation(aggregation2))
                     .get();
 
@@ -175,7 +162,7 @@ public class FileUploadController {
 
         }
 
-        ArrayList<String> months = new ArrayList<String>();
+        ArrayList<String> months = new ArrayList<>();
         for (int i = 0; i <= 11; i++) {
             months.add(new DateFormatSymbols(new Locale("en", "GB")).getShortMonths()[i]);
         }
@@ -303,55 +290,8 @@ public class FileUploadController {
         return hash;
     }
 
-    /*@GetMapping("/delete/{uniqueKey:.+}")
-    public String deleteUploadedFiles(@PathVariable String uniqueKey, RedirectAttributes redirectAttributes) throws IOException {
-        long deleted = 0;
-
-        String indexName = env.getProperty("es.index");
-
-        boolean enableSsl = Boolean.parseBoolean(System.getProperty("ssl", env.getProperty("es.ssl")));
-        String cluster = env.getProperty("es.cluster");
-        String user = env.getProperty("es.user");
-
-        Settings settings = Settings.builder()
-                .put("client.transport.nodes_sampler_interval", "5s")
-                .put("client.transport.sniff", false)
-                .put("transport.tcp.compress", true)
-                .put("cluster.name", cluster)
-                .put("xpack.security.transport.ssl.enabled", enableSsl)
-                .put("request.headers.X-Found-Cluster", cluster)
-                .put("xpack.security.user", user)
-                .build();
-
-        try (TransportClient transportClient = new PreBuiltXPackTransportClient(settings)) {
-            String endpoint = env.getProperty("es.endpoint");
-            int port = Integer.parseInt(env.getProperty("es.port"));
-
-            try {
-                transportClient
-                        .addTransportAddress(new TransportAddress(InetAddress.getByName(endpoint), port));
-            } catch (Exception e) {
-                log.error("could not resolve es endpoint: " + endpoint + ":" + port);
-            }
-
-            BulkByScrollResponse response =
-                    DeleteByQueryAction.INSTANCE.newRequestBuilder(transportClient)
-                            .filter(QueryBuilders.matchQuery("unique_key", uniqueKey))
-                            .source(indexName)
-                            .get();
-
-            deleted = response.getDeleted();
-
-            log.info("number of deleted documents: " + deleted);
-        }
-
-        redirectAttributes.addFlashAttribute("message", "<small>Dataset was successfully deleted (" + deleted + " rows).</small><br/><br/>");
-
-        return "redirect:/";
-    }*/
-
     @GetMapping("/del/{filename:.+}")
-    public String deleteUploadedFile(@PathVariable String filename, RedirectAttributes redirectAttributes) throws IOException {
+    public String deleteUploadedFile(@PathVariable String filename, RedirectAttributes redirectAttributes) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         String username = ((User) principal).getUsername();
@@ -364,12 +304,12 @@ public class FileUploadController {
     }
 
     @GetMapping("/")
-    public String listUploadedFiles(Model model) throws IOException {
+    public String listUploadedFiles(Model model) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         String username = ((User) principal).getUsername();
 
-        List<Map<String, String>> files = new ArrayList<Map<String, String>>();
+        List<Map<String, String>> files = new ArrayList<>();
         try {
             files = storageService.loadAll("/processed/new/" + username);
         } catch(Exception e) {
@@ -377,22 +317,13 @@ public class FileUploadController {
         }
         model.addAttribute("files", files);
 
-        ArrayList<String> users = new ArrayList<String>();
+        ArrayList<String> users = new ArrayList<>();
         users.add(username);
 
         this.usersActivity(model, users);
 
         return "uploadForm";
     }
-
-    /*@GetMapping("/files/{filename:.+}")
-    @ResponseBody
-    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-
-        Resource file = storageService.loadAsResource(filename);
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"" + file.getFilename() + "\"").body(file);
-    }*/
 
     @RequestMapping(value = "/", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
@@ -405,18 +336,11 @@ public class FileUploadController {
         int errors = 0;
         storageService.store(file, "/new/" + username);
 
-        String result = "";
-        if(errors == 0) {
-            result = "<h1>Congratulations! Your data has been stored</h1>";
-            result += "<div>";
-            result += "Now you can sit back and enjoy a coffee.";
-            result += "</div>";
-        } else {
-            result = "<h1>Oops! Your data has NOT been stored</h1>";
-            result += "<div>";
-            result += "One or more errors occurred while parsing your data. Please contact us.";
-            result += "</div>";
-        }
+        String result;
+        result = "<h1>Congratulations! Your data has been stored</h1>";
+        result += "<div>";
+        result += "Now you can sit back and enjoy a coffee.";
+        result += "</div>";
 
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode objectNode = mapper.createObjectNode();
@@ -431,7 +355,7 @@ public class FileUploadController {
     }
 
     @RequestMapping(value = "/lost", method = RequestMethod.GET)
-    public String lostForm() throws IOException {
+    public String lostForm() {
         return "lost";
     }
 
