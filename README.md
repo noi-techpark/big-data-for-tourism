@@ -1,12 +1,24 @@
 # Tourism data collector
 
-An Elasticsearch CSV file manager written in Java 1.8 using Maven for the build.
+A CSV file manager written in Java 1.8 using Maven for the build.
 
 ## Features
 
-* Uses the [ElasticUtils](https://github.com/bytefish/ElasticUtils) library for working with Elasticsearch 6
+* Uploading files using SFTP
 * Files get processed by [Apache NiFi](https://nifi.apache.org)
-* [SQLite database](https://www.sqlite.org) for user management
+* [SQLite database](https://www.sqlite.org/) for user management
+* Overview of the user activity
+
+## Libraries (see more on [third-party dependency file](THIRD-PARTY.txt))
+
+* [Elasticsearch Java API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/client.html)
+* [Simple Java Mail](http://www.simplejavamail.org/)
+* [Standard JSON library for Java](https://github.com/FasterXML/jackson)
+* [Commons Lang](https://commons.apache.org/proper/commons-lang/)
+* [SQLite JDBC](https://bitbucket.org/xerial/sqlite-jdbc)
+* [Commons IO](https://commons.apache.org/proper/commons-io/)
+* [Commons VFS](https://commons.apache.org/proper/commons-vfs/)
+* [JSch](http://www.jcraft.com/jsch/)
 
 ## Sample CSV File
 
