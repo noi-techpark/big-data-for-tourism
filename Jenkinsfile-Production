@@ -10,9 +10,6 @@ pipeline {
         TESTSERVER_TOMCAT_ENDPOINT = credentials('testserver-tomcat8-url')
         TESTSERVER_TOMCAT_CREDENTIALS = credentials('testserver-tomcat8-credentials')
 
-        SECURITY_USERNAME = credentials('big-data-for-tourism-prod-security-username')
-        SECURITY_PASSWORD = credentials('big-data-for-tourism-prod-security-password')
-
         ES_ENDPOINT = "35aaf388d8e802fdacbf16f97906e933.eu-west-1.aws.found.io"
         ES_PORT = "9343"
         ES_SSL = "true"
