@@ -33,8 +33,8 @@ pipeline {
         SFTP_KEY = credentials('big-data-for-tourism-prod-sftp-key')
         SFTP_PASSPHRASE = ""
 
-        SMTP_HOST = smtp.idm-suedtirol.com
-        SMTP_PORT = 587
+        SMTP_HOST = "smtp.idm-suedtirol.com"
+        SMTP_PORT = "587"
         SMTP_USERNAME = credentials('big-data-for-tourism-prod-smtp-username')
         SMTP_PASSWORD = credentials('big-data-for-tourism-prod-smtp-password')
         MAIL_SUBJECT = "Congratulations! Your data has been stored"
