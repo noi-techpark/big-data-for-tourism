@@ -6,7 +6,7 @@
 </head>
 <body>
 
-	<div class="page-logout"><a href="" th:href="/logout">Logout</a></div>
+	<div class="page-logout"><a href="" href="/logout">Logout</a></div>
 
 	<h1>Tourism Data Collector</h1>
 
@@ -60,7 +60,7 @@
 						<td width="20%" align="center" th:text="${file.get('firstDate')}">firstDate</td>
 						<td width="20%" align="center" th:text="${file.get('lastDate')}">lastDate</td>
 						<td width="20%" align="center" th:text="${file.get('uploadedDate')}">uploadedDate</td>
-						<td width="20%" align="center"><a th:href="@{/del/{filename}(filename=${file.get('filename')})}" onclick="return confirm('Are you sure to delete this set?')">Delete set</a></td>
+						<td width="20%" align="center"><a href="@{/del/{filename}(filename=${file.get('filename')})}" onclick="return confirm('Are you sure to delete this set?')">Delete set</a></td>
 					</tr>
 				</th:block>
 			</table>
