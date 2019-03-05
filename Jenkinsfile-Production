@@ -1,0 +1,99 @@
+pipeline {
+    agent {
+        dockerfile {
+            filename 'docker/dockerfile-java'
+            additionalBuildArgs '--build-arg JENKINS_USER_ID=`id -u jenkins` --build-arg JENKINS_GROUP_ID=`id -g jenkins`'
+        }
+    }
+
+    environment {
+        TESTSERVER_TOMCAT_ENDPOINT = credentials('testserver-tomcat8-url')
+        TESTSERVER_TOMCAT_CREDENTIALS = credentials('testserver-tomcat8-credentials')
+
+        ES_ENDPOINT = "35aaf388d8e802fdacbf16f97906e933.eu-west-1.aws.found.io"
+        ES_PORT = "9343"
+        ES_SSL = "true"
+        ES_INDEX = "index"
+        ES_TYPE = "index-type"
+        ES_CLUSTER = "35aaf388d8e802fdacbf16f97906e933"
+        ES_USER = credentials('big-data-for-tourism-prod-es-username-password')
+        ES_USERDETAILS = "index-userdetails"
+
+        DB_URL = "jdbc:sqlite:/var/bigdata4tourism/tourism-collector.db"
+        DB_USERNAME = ""
+        DB_PASSWORD = ""
+
+        SFTP_HOST = "34.246.71.233"
+        SFTP_USERNAME = credentials('big-data-for-tourism-prod-sftp-username')
+        SFTP_PASSWORD = ""
+        SFTP_DIR = "/home/seacom/data/IDM"
+        SFTP_KEY = credentials('big-data-for-tourism-prod-sftp-key')
+        SFTP_PASSPHRASE = ""
+
+        SMTP_HOST = "smtp.idm-suedtirol.com"
+        SMTP_PORT = "587"
+        SMTP_USERNAME = credentials('big-data-for-tourism-prod-smtp-username')
+        SMTP_PASSWORD = credentials('big-data-for-tourism-prod-smtp-password')
+        MAIL_SUBJECT = "Congratulations! Your data has been stored"
+        MAIL_FROM_NAME = "Tourism Data Collector"
+        MAIL_FROM_ADDRESS = "bdt@idm-suedtirol.com"
+    }
+
+    stages {
+        stage('Configure') {
+            steps {
+                sh 'sed -i -e "s/<\\/settings>$//g\" ~/.m2/settings.xml'
+                sh 'echo "    <servers>" >> ~/.m2/settings.xml'
+                sh 'echo "        ${TESTSERVER_TOMCAT_CREDENTIALS}" >> ~/.m2/settings.xml'
+                sh 'echo "    </servers>" >> ~/.m2/settings.xml'
+                sh 'echo "</settings>" >> ~/.m2/settings.xml'
+
+                sh 'sed -i -e "s|\\(security.username\\s*=\\).*\\$|\\1${SECURITY_USERNAME}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(security.password\\s*=\\).*\\$|\\1${SECURITY_PASSWORD}|" src/main/resources/application.properties'
+
+                sh 'sed -i -e "s|\\(es.endpoint\\s*=\\).*\\$|\\1${ES_ENDPOINT}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(es.port\\s*=\\).*\\$|\\1${ES_PORT}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(es.ssl\\s*=\\).*\\$|\\1${ES_SSL}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(es.index\\s*=\\).*\\$|\\1${ES_INDEX}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(es.type\\s*=\\).*\\$|\\1${ES_TYPE}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(es.cluster\\s*=\\).*\\$|\\1${ES_CLUSTER}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(es.user\\s*=\\).*\\$|\\1${ES_USER}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(es.userdetails\\s*=\\).*\\$|\\1${ES_USERDETAILS}|" src/main/resources/application.properties'
+
+                sh 'sed -i -e "s|\\(spring.datasource.url\\s*=\\).*\\$|\\1${DB_URL}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(spring.datasource.username\\s*=\\).*\\$|\\1${DB_USERNAME}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(spring.datasource.password\\s*=\\).*\\$|\\1${DB_PASSWORD}|" src/main/resources/application.properties'
+                
+                sh 'sed -i -e "s|\\(sftp.host\\s*=\\).*\\$|\\1${SFTP_HOST}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(sftp.username\\s*=\\).*\\$|\\1${SFTP_USERNAME}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(sftp.password\\s*=\\).*\\$|\\1${SFTP_PASSWORD}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(sftp.dir\\s*=\\).*\\$|\\1${SFTP_DIR}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(sftp.key\\s*=\\).*\\$|\\1${SFTP_KEY}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(sftp.passphrase\\s*=\\).*\\$|\\1${SFTP_PASSPHRASE}|" src/main/resources/application.properties'
+
+                sh 'sed -i -e "s|\\(simplejavamail.smtp.host\\s*=\\).*\\$|\\1${SMTP_HOST}|" src/main/resources/simplejavamail.properties'
+                sh 'sed -i -e "s|\\(simplejavamail.smtp.port\\s*=\\).*\\$|\\1${SMTP_PORT}|" src/main/resources/simplejavamail.properties'
+                sh 'sed -i -e "s|\\(simplejavamail.smtp.username\\s*=\\).*\\$|\\1${SMTP_USERNAME}|" src/main/resources/simplejavamail.properties'
+                sh 'sed -i -e "s|\\(simplejavamail.smtp.password\\s*=\\).*\\$|\\1${SMTP_PASSWORD}|" src/main/resources/simplejavamail.properties'
+                sh 'sed -i -e "s|\\(simplejavamail.defaults.subject\\s*=\\).*\\$|\\1${MAIL_SUBJECT}|" src/main/resources/simplejavamail.properties'
+                sh 'sed -i -e "s|\\(simplejavamail.defaults.from.name\\s*=\\).*\\$|\\1${MAIL_FROM_NAME}|" src/main/resources/simplejavamail.properties'
+                sh 'sed -i -e "s|\\(simplejavamail.defaults.from.address\\s*=\\).*\\$|\\1${MAIL_FROM_ADDRESS}|" src/main/resources/simplejavamail.properties'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn -B -U clean test verify'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: 'target/tourism.war', onlyIfSuccessful: true
+            }
+        }
+    }
+}

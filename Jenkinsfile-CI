@@ -1,20 +1,15 @@
 pipeline {
-    agent any
-
-    environment {
-        APPLICATION_PROPERTIES = credentials('bigdatafortourism-application.properties')
-        MAIL_PROPERTIES = credentials('bigdatafortourism-mailconfig.properties')	
-    }
-    stages {
-        stage('Configure') {
-            steps {
-               sh 'cat "${APPLICATION_PROPERTIES}" > src/main/resources/application.properties'
-               sh 'cat "${MAIL_PROPERTIES}" > src/main/resources/simplejavamail.properties'
-            }
+    agent {
+        dockerfile {
+            filename 'docker/dockerfile-java'
+            additionalBuildArgs '--build-arg JENKINS_USER_ID=`id -u jenkins` --build-arg JENKINS_GROUP_ID=`id -g jenkins`'
         }
+    }
+
+    stages {
         stage('Test') {
             steps {
-               sh 'mvn clean test'
+                sh 'mvn -B -U clean test verify'
             }
         }
     }
