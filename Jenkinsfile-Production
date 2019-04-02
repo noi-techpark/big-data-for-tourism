@@ -87,7 +87,7 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh 'mvn clean package'
+                sh 'mvn -B -U clean package'
             }
         }
         stage('Archive') {
