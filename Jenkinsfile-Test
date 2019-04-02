@@ -68,7 +68,7 @@ pipeline {
                 sh 'sed -i -e "s|\\(sftp.username\\s*=\\).*\\$|\\1${SFTP_USERNAME}|" src/main/resources/application.properties'
                 sh 'sed -i -e "s|\\(sftp.password\\s*=\\).*\\$|\\1${SFTP_PASSWORD}|" src/main/resources/application.properties'
                 sh 'sed -i -e "s|\\(sftp.dir\\s*=\\).*\\$|\\1${SFTP_DIR}|" src/main/resources/application.properties'
-                sh 'sed -i -e "s|\\(sftp.key\\s*=\\).*\\$|\\1src/main/resources/.ssh/id_rsa|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(sftp.key\\s*=\\).*\\$|\\1./.ssh/id_rsa|" src/main/resources/application.properties'
                 sh 'sed -i -e "s|\\(sftp.passphrase\\s*=\\).*\\$|\\1${SFTP_PASSPHRASE}|" src/main/resources/application.properties'
                 
                 sh 'mkdir -p src/main/resources/.ssh'
@@ -91,12 +91,12 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh 'mvn clean package'
+                sh 'mvn -B -U clean package'
             }
         }
         stage('Deploy') {
             steps{
-                sh 'mvn tomcat:redeploy -Dmaven.tomcat.url=${TESTSERVER_TOMCAT_ENDPOINT} -Dmaven.tomcat.server=testServer'
+                sh 'mvn -B -U tomcat:redeploy -Dmaven.tomcat.url=${TESTSERVER_TOMCAT_ENDPOINT} -Dmaven.tomcat.server=testServer'
             }
         }
     }
