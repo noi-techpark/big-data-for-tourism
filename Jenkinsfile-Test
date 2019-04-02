@@ -68,8 +68,11 @@ pipeline {
                 sh 'sed -i -e "s|\\(sftp.username\\s*=\\).*\\$|\\1${SFTP_USERNAME}|" src/main/resources/application.properties'
                 sh 'sed -i -e "s|\\(sftp.password\\s*=\\).*\\$|\\1${SFTP_PASSWORD}|" src/main/resources/application.properties'
                 sh 'sed -i -e "s|\\(sftp.dir\\s*=\\).*\\$|\\1${SFTP_DIR}|" src/main/resources/application.properties'
-                sh 'sed -i -e "s|\\(sftp.key\\s*=\\).*\\$|\\1${SFTP_KEY}|" src/main/resources/application.properties'
+                sh 'sed -i -e "s|\\(sftp.key\\s*=\\).*\\$|\\1src/main/resources/.ssh/id_rsa|" src/main/resources/application.properties'
                 sh 'sed -i -e "s|\\(sftp.passphrase\\s*=\\).*\\$|\\1${SFTP_PASSPHRASE}|" src/main/resources/application.properties'
+                
+                sh 'mkdir -p src/main/resources/.ssh'
+                sh 'cp "${SFTP_KEY}" src/main/resources/.ssh/id_rsa'
 
                 sh 'sed -i -e "s|\\(simplejavamail.smtp.host\\s*=\\).*\\$|\\1${SMTP_HOST}|" src/main/resources/simplejavamail.properties'
                 sh 'sed -i -e "s|\\(simplejavamail.smtp.port\\s*=\\).*\\$|\\1${SMTP_PORT}|" src/main/resources/simplejavamail.properties'
