@@ -3,8 +3,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.puecher</groupId>
-    <artifactId>tourism-data-collector</artifactId>
+    <groupId>it.bz.opendatahub.bigtdata4tourism</groupId>
+    <artifactId>uploader</artifactId>
     <packaging>war</packaging>
     <version>0.1.0</version>
 
@@ -111,7 +111,7 @@
     </properties>
 
     <build>
-	    <finalName>tourism</finalName>
+	    <finalName>ROOT</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
