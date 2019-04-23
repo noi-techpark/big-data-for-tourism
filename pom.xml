@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>it.bz.opendatahub.bigtdata4tourism</groupId>
-    <artifactId>uploader</artifactId>
+    <artifactId>ROOT</artifactId>
     <packaging>war</packaging>
     <version>0.1.0</version>
 
