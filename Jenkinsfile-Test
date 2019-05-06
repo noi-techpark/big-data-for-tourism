@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        TESTSERVER_TOMCAT_ENDPOINT = "http://34.246.134.199:8100/manager/text"
+        TESTSERVER_TOMCAT_ENDPOINT = "http://bigdata4tourism.tomcat02.testingmachine.eu:8080/manager/text"
         TESTSERVER_TOMCAT_CREDENTIALS = credentials('testserver-tomcat8-credentials')
 
         ES_ENDPOINT = "35aaf388d8e802fdacbf16f97906e933.eu-west-1.aws.found.io"
