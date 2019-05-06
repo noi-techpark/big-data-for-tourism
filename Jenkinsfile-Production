@@ -92,7 +92,7 @@ pipeline {
         }
         stage('Archive') {
             steps {
-                archiveArtifacts artifacts: 'target/tourism.war', onlyIfSuccessful: true
+                archiveArtifacts artifacts: 'target/ROOT.war', onlyIfSuccessful: true
             }
         }
     }
