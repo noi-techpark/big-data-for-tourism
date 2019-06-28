@@ -56,11 +56,9 @@
 			<table class="table" width="579" align="center">
 				<th:block th:each="file : ${files}">
 					<tr>
-						<td width="20%" th:text="${file.get('filename')}">filename</td>
-						<td width="20%" align="center" th:text="${file.get('firstDate')}">firstDate</td>
-						<td width="20%" align="center" th:text="${file.get('lastDate')}">lastDate</td>
-						<td width="20%" align="center" th:text="${file.get('uploadedDate')}">uploadedDate</td>
-						<td width="20%" align="center"><a th:href="@{/del/{filename}(filename=${file.get('filename')})}" onclick="return confirm('Are you sure to delete this set?')">Delete set</a></td>
+						<td width="33%" th:text="${file.get('filename')}">filename</td>
+						<td width="33%" align="center" th:text="${file.get('uploadedDate')}">uploadedDate</td>
+						<td width="33%" align="center"><a th:href="@{/del/{filename}(filename=${file.get('filename')})}" onclick="return confirm('Are you sure to delete this set?')">Delete set</a></td>
 					</tr>
 				</th:block>
 			</table>
