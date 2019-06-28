@@ -21,10 +21,7 @@ import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.io.File.createTempFile;
 
@@ -166,12 +163,16 @@ public class FtpStorageService implements StorageService {
                     file.put("totalRows", Integer.toString(totalRows));
                     file.put("notValidRows", Integer.toString(notValidRows));
                     file.put("filenameReport", f.getName().getBaseName().replace(".csv", ".report"));
+                    file.put("sortable", Long.toString(f.getContent().getLastModifiedTime()));
                     list.add(file);
                 }
             }
         } catch (FileSystemException e) {
             throw new StorageException("Failed to read stored files " + startPath, e);
         }
+
+        Collections.sort(list, Collections.reverseOrder(Comparator.comparing(o -> Long.parseLong(o.get("sortable")))));
+
         return list;
 
     }
