@@ -16,12 +16,21 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.FileOutputStream;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Collections;
+import java.util.Comparator;
 
 import static java.io.File.createTempFile;
 
@@ -355,11 +364,16 @@ public class FtpStorageService implements StorageService {
     }
 
 	private File getKeyFile(String path) throws FileNotFoundException {
-     if (!path.startsWith(File.separator)) {
-             String keyFileFolder = FtpStorageService.class.getClassLoader().getResource("/").getFile();
-             File keyFile = new File(keyFileFolder+path);
-             return keyFile;
-     }
-     return null;
+        if (!path.startsWith(File.separator)) {
+            File keyFile;
+            try {
+                String keyFileFolder = FtpStorageService.class.getClassLoader().getResource("/").getFile();
+                keyFile = new File(keyFileFolder + path);
+            } catch (Exception e) {
+                keyFile = new File(path);
+            }
+            return keyFile;
+        }
+        return null;
 	}
 }
