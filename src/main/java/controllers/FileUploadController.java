@@ -24,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -301,6 +303,22 @@ public class FileUploadController {
         redirectAttributes.addFlashAttribute("message", "<small>Dataset was successfully deleted.</small><br/><br/>");
 
         return "redirect:/";
+    }
+
+    @GetMapping("/report/{filename:.+}")
+    @ResponseBody
+    public ResponseEntity<Resource> showReport(@PathVariable String filename) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String username = ((User) principal).getUsername();
+
+        Resource file = storageService.loadAsResource("/processed/new/" + username + "/" + filename);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
+        //headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"");
+
+        return ResponseEntity.ok().headers(headers).body(file);
     }
 
     @GetMapping("/")

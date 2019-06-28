@@ -1,5 +1,9 @@
 package controllers.storage;
 
+import com.unboundid.util.json.JSONArray;
+import com.unboundid.util.json.JSONObject;
+import jdk.nashorn.internal.parser.JSONParser;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.*;
 import org.apache.commons.vfs2.provider.sftp.IdentityInfo;
@@ -7,17 +11,22 @@ import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.io.File.createTempFile;
 
 @Service
 @Primary
@@ -123,11 +132,40 @@ public class FtpStorageService implements StorageService {
             FileObject[] children = sftpFile.getChildren();
             for (FileObject f : children) {
                 if (f.getType() == FileType.FILE) {
+                    String ext = FilenameUtils.getExtension(f.getName().getBaseName());
+                    if (!ext.equals("csv")) {
+                        continue;
+                    }
+
+                    String status = "cached"; // not processed
+                    int totalRows = 0;
+                    int notValidRows = 0;
+                    try {
+                        String reportFileName = f.getPublicURIString().replace(".csv", ".report");
+                        FileObject reportFile = fsManager.resolveFile(reportFileName, opts);
+                        if (reportFile.exists()) {
+                            String content = IOUtils.toString(reportFile.getContent().getInputStream(), StandardCharsets.UTF_8);
+                            JSONObject json = new JSONObject(content);
+                            totalRows = Integer.parseInt(json.getField("nr_tot_righe").toString());
+                            notValidRows = ((JSONArray) json.getField("righe_non_valide")).size();
+                            if (0 == notValidRows) {
+                                status = "done"; // processed with no errors
+                            } else {
+                                status = "error"; // has errors
+                            }
+                        }
+                    } catch (Exception e) { }
+
                     Map<String, String> file = new HashMap<>();
                     file.put("filename", f.getName().getBaseName());
+                    file.put("filenameShorten", (f.getName().getBaseName().length() > 20 ? f.getName().getBaseName().substring(0, 20) + "..." : f.getName().getBaseName()));
                     file.put("firstDate", "N/A"); // @deprecated
                     file.put("lastDate", "N/A"); // @deprecated
                     file.put("uploadedDate", new SimpleDateFormat("yyyy-MM-dd").format(f.getContent().getLastModifiedTime()));
+                    file.put("status", status);
+                    file.put("totalRows", Integer.toString(totalRows));
+                    file.put("notValidRows", Integer.toString(notValidRows));
+                    file.put("filenameReport", f.getName().getBaseName().replace(".csv", ".report"));
                     list.add(file);
                 }
             }
@@ -136,6 +174,51 @@ public class FtpStorageService implements StorageService {
         }
         return list;
 
+    }
+
+    @Override
+    public Resource loadAsResource(String filename) {
+        String startPath;
+        if (keyPath != null) {
+            startPath = "sftp://" + user + "@" + host + rootLocation;
+        } else {
+            startPath = "sftp://" + user + ":" + password + "@" + host + rootLocation;
+        }
+
+        FileObject localFile;
+        try {
+            localFile = fsManager.resolveFile(startPath + filename, opts);
+        } catch (FileSystemException e) {
+            throw new StorageException("Failed to resolve file", e);
+        }
+
+        final File tempFile;
+        try {
+            InputStream in = localFile.getContent().getInputStream();
+            tempFile = createTempFile(filename, ".json");
+            tempFile.deleteOnExit();
+            try (FileOutputStream out = new FileOutputStream(tempFile)) {
+                IOUtils.copy(in, out);
+            }
+        } catch (IOException e) {
+            throw new StorageException("Failed to create tempfile", e);
+        }
+
+        try {
+            Path file = tempFile.toPath();
+            Resource resource = new UrlResource(file.toUri());
+            if (resource.exists() || resource.isReadable()) {
+                return resource;
+            }
+            else {
+                throw new StorageFileNotFoundException(
+                        "Could not read file: " + filename);
+
+            }
+        }
+        catch (MalformedURLException e) {
+            throw new StorageFileNotFoundException("Could not read file: " + filename, e);
+        }
     }
 
     @Override
