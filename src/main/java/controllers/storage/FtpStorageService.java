@@ -333,15 +333,33 @@ public class FtpStorageService implements StorageService {
         }
 
         IdentityInfo identityInfo;
-        if (passPhrase != null) {
-            identityInfo = new IdentityInfo(new File(keyPath), passPhrase.getBytes());
-        } else {
-            identityInfo =  new IdentityInfo(new File(keyPath));
-        }
-        try {
-            SftpFileSystemConfigBuilder.getInstance().setIdentityInfo(opts, identityInfo);
-        } catch (FileSystemException e) {
-            throw new StorageException("setIdentityInfo failed", e);
-        }
+        File keyFile = null;
+		try {
+			keyFile = getKeyFile(keyPath);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			throw new StorageException("Could not find private key: ", e);
+		}
+		if (keyFile !=null) {
+	        if (passPhrase != null) {
+	            identityInfo = new IdentityInfo(keyFile, passPhrase.getBytes());
+	        } else {
+	            identityInfo =  new IdentityInfo(keyFile);
+	        }
+	        try {
+	            SftpFileSystemConfigBuilder.getInstance().setIdentityInfo(opts, identityInfo);
+	        } catch (FileSystemException e) {
+	            throw new StorageException("setIdentityInfo failed", e);
+	        }
+		}
     }
+
+	private File getKeyFile(String path) throws FileNotFoundException {
+     if (!path.startsWith(File.separator)) {
+             String keyFileFolder = FtpStorageService.class.getClassLoader().getResource("/").getFile();
+             File keyFile = new File(keyFileFolder+path);
+             return keyFile;
+     }
+     return null;
+	}
 }
