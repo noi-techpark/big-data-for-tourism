@@ -55,6 +55,7 @@ public class FtpStorageService implements StorageService {
             startPath = "sftp://" + user + ":" + password + "@" + host + rootLocation;
         }
 
+        FileObject destination;
         try {
             if (file.isEmpty()) {
                 throw new StorageException("Failed to store empty file " + file.getOriginalFilename());
@@ -73,7 +74,7 @@ public class FtpStorageService implements StorageService {
                 throw new StorageException("Failed to copy file to ram", e);
             }
 
-            FileObject destination = fsManager.resolveFile(startPath + location + "/" + localFile.getName().getBaseName(), opts);
+            destination = fsManager.resolveFile(startPath + location + "/" + localFile.getName().getBaseName(), opts);
             if (!destination.getParent().exists()) {
                 destination.getParent().createFolder();
             }
@@ -81,6 +82,23 @@ public class FtpStorageService implements StorageService {
             destination.copyFrom(localFile, Selectors.SELECT_SELF);
         } catch (FileSystemException e) {
             throw new StorageException("Failed to store file", e);
+        }
+
+        try { // wait for report file :/
+            while (true) {
+                java.lang.Thread.sleep(2000);
+
+                String fileName = startPath + location + "/" + destination.getName().getBaseName();
+                fileName = fileName.replace("/new/", "/processed/new/");
+                fileName = fileName.replace(".csv", ".report");
+
+                FileObject reportFile = fsManager.resolveFile(fileName, opts);
+                if (reportFile.exists()) {
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            throw new StorageException("Failed to wait for report file", e);
         }
     }
 
@@ -175,6 +193,71 @@ public class FtpStorageService implements StorageService {
 
         return list;
 
+    }
+
+    @Override
+    public Map<String, String> loadSingleFile(String location) {
+        String startPath;
+        if (keyPath != null) {
+            startPath = "sftp://" + user + "@" + host + rootLocation;
+        } else {
+            startPath = "sftp://" + user + ":" + password + "@" + host + rootLocation;
+        }
+
+        FileObject f;
+        try {
+            f = fsManager.resolveFile(startPath + location, opts);
+        } catch (FileSystemException e) {
+            throw new StorageException("SFTP error parsing location " + location, e);
+        }
+
+        try {
+            //FileObject[] children = sftpFile.getChildren();
+            //for (FileObject f : children) {
+                if (f.getType() == FileType.FILE) {
+                    String ext = FilenameUtils.getExtension(f.getName().getBaseName());
+                    //if (!ext.equals("csv")) {
+                    //    continue;
+                    //}
+
+                    String status = "cached"; // not processed
+                    int totalRows = 0;
+                    int notValidRows = 0;
+                    try {
+                        String reportFileName = f.getPublicURIString().replace(".csv", ".report");
+                        FileObject reportFile = fsManager.resolveFile(reportFileName, opts);
+                        if (reportFile.exists()) {
+                            String content = IOUtils.toString(reportFile.getContent().getInputStream(), StandardCharsets.UTF_8);
+                            JSONObject json = new JSONObject(content);
+                            totalRows = Integer.parseInt(json.getField("nr_tot_righe").toString());
+                            notValidRows = ((JSONArray) json.getField("righe_non_valide")).size();
+                            if (0 == notValidRows) {
+                                status = "done"; // processed with no errors
+                            } else {
+                                status = "error"; // has errors
+                            }
+                        }
+                    } catch (Exception e) { }
+
+                    Map<String, String> file = new HashMap<>();
+                    file.put("filename", f.getName().getBaseName());
+                    file.put("filenameShorten", (f.getName().getBaseName().length() > 20 ? f.getName().getBaseName().substring(0, 20) + "..." : f.getName().getBaseName()));
+                    file.put("firstDate", "N/A"); // @deprecated
+                    file.put("lastDate", "N/A"); // @deprecated
+                    file.put("uploadedDate", new SimpleDateFormat("yyyy-MM-dd").format(f.getContent().getLastModifiedTime()));
+                    file.put("status", status);
+                    file.put("totalRows", Integer.toString(totalRows));
+                    file.put("notValidRows", Integer.toString(notValidRows));
+                    file.put("filenameReport", f.getName().getBaseName().replace(".csv", ".report"));
+                    file.put("sortable", Long.toString(f.getContent().getLastModifiedTime()));
+                    return file;
+                }
+            //}
+        } catch (FileSystemException e) {
+            throw new StorageException("Failed to read stored files " + location, e);
+        }
+
+        return null;
     }
 
     @Override

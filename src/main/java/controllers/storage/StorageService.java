@@ -17,6 +17,8 @@ public interface StorageService {
 
     List<Map<String, String>> loadAll(String location);
 
+    Map<String, String> loadSingleFile(String location);
+
     Resource loadAsResource(String filename);
 
 }

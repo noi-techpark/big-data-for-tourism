@@ -364,6 +364,23 @@ public class FileUploadController {
         ObjectNode objectNode = mapper.createObjectNode();
         objectNode.put("message", result);
 
+        Map<String, String> f = storageService.loadSingleFile("/processed/new/" + username + "/" + file.getOriginalFilename());
+
+        String append = "";
+        if (!f.get("notValidRows").equals("0")) {
+            append += "<span class=\"stats\">(<span>" + f.get("notValidRows") + "</span>/<span>" + f.get("totalRows") + "</span>)</span>";
+            append += " <a class=\"info-link\" target=\"_blank\" href=\"/report/" + f.get("filenameReport") + "\"><i class=\"material-icons\">info</i></a>";
+        }
+
+        objectNode.put("row", "<tr>" +
+                "<td width=\"25%\">" + f.get("filenameShorten") + "</td>" +
+                "<td width=\"25%\" align=\"center\">" + f.get("uploadedDate") + "</td>" +
+                "<td width=\"25%\" align=\"center\">" +
+                    "<i class=\"material-icons " + f.get("status") + "\">" + f.get("status") + "</i> " + append +
+                "</td>" +
+                "<td width=\"25%\" align=\"center\"><a href=\"/del/" + f.get("filename") + "\" onclick=\"return confirm('Are you sure to delete this set?')\">Delete set</a></td>" +
+                "</tr>");
+
         return objectNode.toString();
     }
 

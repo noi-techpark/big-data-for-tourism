@@ -121,6 +121,11 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
+    public Map<String, String> loadSingleFile(String location) {
+        return null; // @TODO: to implement
+    }
+
+    @Override
     public Resource loadAsResource(String filename) {
         try {
             Path file = rootLocation.resolve(filename);
