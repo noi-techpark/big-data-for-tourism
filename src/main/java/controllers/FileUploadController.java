@@ -24,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -303,6 +305,22 @@ public class FileUploadController {
         return "redirect:/";
     }
 
+    @GetMapping("/report/{filename:.+}")
+    @ResponseBody
+    public ResponseEntity<Resource> showReport(@PathVariable String filename) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String username = ((User) principal).getUsername();
+
+        Resource file = storageService.loadAsResource("/processed/new/" + username + "/" + filename);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
+        //headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"");
+
+        return ResponseEntity.ok().headers(headers).body(file);
+    }
+
     @GetMapping("/")
     public String listUploadedFiles(Model model) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -345,6 +363,23 @@ public class FileUploadController {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode objectNode = mapper.createObjectNode();
         objectNode.put("message", result);
+
+        Map<String, String> f = storageService.loadSingleFile("/processed/new/" + username + "/" + file.getOriginalFilename());
+
+        String append = "";
+        if (!f.get("notValidRows").equals("0")) {
+            append += "<span class=\"stats\">(<span>" + f.get("notValidRows") + "</span>/<span>" + f.get("totalRows") + "</span>)</span>";
+            append += " <a class=\"info-link\" target=\"_blank\" href=\"/report/" + f.get("filenameReport") + "\"><i class=\"material-icons\">info</i></a>";
+        }
+
+        objectNode.put("row", "<tr>" +
+                "<td width=\"25%\">" + f.get("filenameShorten") + "</td>" +
+                "<td width=\"25%\" align=\"center\">" + f.get("uploadedDate") + "</td>" +
+                "<td width=\"25%\" align=\"center\">" +
+                    "<i class=\"material-icons " + f.get("status") + "\">" + f.get("status") + "</i> " + append +
+                "</td>" +
+                "<td width=\"25%\" align=\"center\"><a href=\"/del/" + f.get("filename") + "\" onclick=\"return confirm('Are you sure to delete this set?')\">Delete set</a></td>" +
+                "</tr>");
 
         return objectNode.toString();
     }

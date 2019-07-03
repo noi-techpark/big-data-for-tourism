@@ -3,6 +3,7 @@
 	<title>BigData4Tourism: Tourism Data Collector</title>
 	<meta charset="utf-8"/>
 	<link href="css/style.css" rel="stylesheet"/>
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 </head>
 <body>
 
@@ -53,14 +54,15 @@
 		</div>
 
 		<div class="page-content">
-			<table class="table" width="579" align="center">
+			<table class="table table-files" width="579" align="center">
 				<th:block th:each="file : ${files}">
 					<tr>
-						<td width="20%" th:text="${file.get('filename')}">filename</td>
-						<td width="20%" align="center" th:text="${file.get('firstDate')}">firstDate</td>
-						<td width="20%" align="center" th:text="${file.get('lastDate')}">lastDate</td>
-						<td width="20%" align="center" th:text="${file.get('uploadedDate')}">uploadedDate</td>
-						<td width="20%" align="center"><a href="@{/del/{filename}(filename=${file.get('filename')})}" onclick="return confirm('Are you sure to delete this set?')">Delete set</a></td>
+						<td width="25%" th:text="${file.get('filenameShorten')}">filenameShorten</td>
+						<td width="25%" align="center" th:text="${file.get('uploadedDate')}">uploadedDate</td>
+						<td width="25%" align="center">
+							<i class="material-icons" th:classappend="${file.get('status')}" th:text="${file.get('status')}">cached</i> <span th:if="${file.get('notValidRows')} != '0'" class="stats">(<span th:text="${file.get('notValidRows')}">0</span>/<span th:text="${file.get('totalRows')}">0</span>)</span> <a th:if="${file.get('notValidRows')} != '0'" class="info-link" target="_blank" th:href="@{/report/{filename}(filename=${file.get('filenameReport')})}"><i class="material-icons">info</i></a>
+						</td>
+						<td width="25%" align="center"><a th:href="@{/del/{filename}(filename=${file.get('filename')})}" onclick="return confirm('Are you sure to delete this set?')">Delete set</a></td>
 					</tr>
 				</th:block>
 			</table>

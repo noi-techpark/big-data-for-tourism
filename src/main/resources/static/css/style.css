@@ -224,3 +224,24 @@ body {
     padding: 1em;
     line-height: 1;
 }
+
+.material-icons {
+    vertical-align: middle;
+}
+.material-icons.cached {
+    color: #eeeeee;
+}
+.material-icons.done {
+    color: #587825;
+}
+.material-icons.error {
+    color: #f44336;
+}
+.stats {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 1em;
+}
+.info-link {
+    color: #6f6f6e;
+}

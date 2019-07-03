@@ -121,6 +121,30 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
+    public Map<String, String> loadSingleFile(String location) {
+        return null; // @TODO: to implement
+    }
+
+    @Override
+    public Resource loadAsResource(String filename) {
+        try {
+            Path file = rootLocation.resolve(filename);
+            Resource resource = new UrlResource(file.toUri());
+            if (resource.exists() || resource.isReadable()) {
+                return resource;
+            }
+            else {
+                throw new StorageFileNotFoundException(
+                        "Could not read file: " + filename);
+
+            }
+        }
+        catch (MalformedURLException e) {
+            throw new StorageFileNotFoundException("Could not read file: " + filename, e);
+        }
+    }
+
+    @Override
     public void init() {
         try {
             if (!Files.exists(rootLocation)) {

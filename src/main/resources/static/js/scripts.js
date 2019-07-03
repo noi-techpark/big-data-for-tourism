@@ -154,6 +154,8 @@ function upload(e) {
             $('#processing').addClass('hidden');
 
             $('#response').html('<div class="page-content">' + json.message + '</div>');
+
+            $('.table-files').prepend(json.row);
         },
         error: function(response) {
             var error = 'error';
