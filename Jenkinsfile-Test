@@ -13,7 +13,7 @@ pipeline {
         ES_ENDPOINT = "35aaf388d8e802fdacbf16f97906e933.eu-west-1.aws.found.io"
         ES_PORT = "9343"
         ES_SSL = "true"
-        ES_INDEX = "tourism-data_2020"
+        ES_INDEX = "tourism-nifi_2020"
         ES_TYPE = "enquiry"
         ES_CLUSTER = "35aaf388d8e802fdacbf16f97906e933"
         ES_USER = credentials('big-data-for-tourism-test-es-username-password')
