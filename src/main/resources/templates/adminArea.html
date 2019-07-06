@@ -6,7 +6,7 @@
 </head>
 <body>
 
-	<div class="page-logout"><a href="" href="/logout">Logout</a></div>
+	<div class="page-logout"><a href="/logout">Logout</a></div>
 
 	<h1>Tourism Data Collector</h1>
 
@@ -21,7 +21,7 @@
 	</div>
 
 	<div class="page-content">
-		<form method="POST" action="" th:action="/addUsers">
+		<form method="POST" action="/addUsers">
 			<div id="new-emails">
 				<input class="input" type="text" name="email[]" placeholder="Email address"/>
 			</div>
@@ -45,8 +45,8 @@
 			<th:block th:each="username : ${users}">
 				<tr>
 					<td width="50%" th:text="${username}">User</td>
-					<td width="30%" align="center"><a href="/admin/setNewPasswordForUser/{username}(username=${username})" onclick="return confirm('Are you sure to change users password?')">Set new password</a></td>
-					<td width="20%" align="center"><a href="/admin/deleteUser/{username}(username=${username})" onclick="return confirm('Are you sure to delete this user?')">Delete user</a></td>
+					<td width="30%" align="center"><a th:href="@{/admin/setNewPasswordForUser/{username}(username=${username})}" onclick="return confirm('Are you sure to change users password?')">Set new password</a></td>
+					<td width="20%" align="center"><a th:href="@{/admin/deleteUser/{username}(username=${username})}" onclick="return confirm('Are you sure to delete this user?')">Delete user</a></td>
 				</tr>
 			</th:block>
 		</table>
@@ -79,8 +79,8 @@
 									<td th:text="${username.key}">User</td>
 									<th:block th:each="month: ${#numbers.sequence(1,12)}">
 										<td align="center">
-											<span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} == 1" th:text="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')}">0</span>
-											<span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} != 1"><a href="/admin/notifyUser/{username}/{year}/{month}(username=${username.key},year=${year},month=${month})" onclick="return confirm('Are you sure to notify the user?')">0</a></span>
+											<span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} != null and ${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} > 0" th:text="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')}">0</span>
+											<span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} == null or ${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} == 0"><a th:href="@{/admin/notifyUser/{username}/{year}/{month}(username=${username.key},year=${year},month=${month})}" onclick="return confirm('Are you sure to notify the user?')">0</a></span>
 										</td>
 									</th:block>
 								</tr>
