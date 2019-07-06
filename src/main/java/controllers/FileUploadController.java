@@ -116,7 +116,7 @@ public class FileUploadController {
             AggregationBuilder aggregation =
                     AggregationBuilders
                             .terms("aggs")
-                            .field("user");
+                            .field("agenzia.keyword");
 
             AggregationBuilder aggregation2 =
                     AggregationBuilders
