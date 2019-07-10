@@ -26,7 +26,7 @@ pipeline {
         SFTP_HOST = "34.246.71.233"
         SFTP_USERNAME = credentials('big-data-for-tourism-test-sftp-username')
         SFTP_PASSWORD = ""
-        SFTP_DIR = "/home/seacom/data/IDM"
+        SFTP_DIR = "/var/local/input_sftp"
         SFTP_KEY = credentials('big-data-for-tourism-test-sftp-key')
         SFTP_PASSPHRASE = ""
 
