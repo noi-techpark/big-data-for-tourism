@@ -95,8 +95,8 @@
                             <tr th:each="username : ${aggs}">
                                 <th:block th:each="month: ${#numbers.sequence(1,12)}">
                                     <td align="center">
-                                        <span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} == 1" th:text="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')}">0</span>
-                                        <span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} != 1">0</span>
+                                        <span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} != null" th:text="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')}">0</span>
+                                        <span th:if="${aggs.get('__${username.key}__').get('__${year}__-__${month}__')} == null">0</span>
                                     </td>
                                 </th:block>
                             </tr>
