@@ -413,12 +413,14 @@ public class FileUploadController {
             simpleMail.setText("Hi there!\n\nYour username: " + username + "\n\nYour password: " + password + "\n\nCheers");
             new Mailer().sendMail(simpleMail);
 
+            redirectAttributes.addFlashAttribute("message", "<small>Yay! A new password has been sent to you</small><br/><br/>");
+
             log.info("set a new password for: " + username);
         } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "<small>Oops... We could not find your email address, please try again</small><br/><br/>");
+
             log.error(e.getMessage());
         }
-
-        redirectAttributes.addFlashAttribute("message", "<small>Yay! A new password has been sent to you</small><br/><br/>");
 
         return "redirect:/lost";
     }
