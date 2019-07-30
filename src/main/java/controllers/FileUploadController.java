@@ -417,7 +417,7 @@ public class FileUploadController {
 
             log.info("set a new password for: " + username);
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "<small>Oops... We could not find your email address, please try again</small><br/><br/>");
+            redirectAttributes.addFlashAttribute("message", "<small>Oops... We could not find your email address, please try again or write us at info@davinci.bz.it</small><br/><br/>");
 
             log.error(e.getMessage());
         }
