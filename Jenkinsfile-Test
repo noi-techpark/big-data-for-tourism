@@ -30,13 +30,13 @@ pipeline {
         SFTP_KEY = credentials('big-data-for-tourism-test-sftp-key')
         SFTP_PASSPHRASE = ""
 
-        SMTP_HOST = "smtp.idm-suedtirol.com"
+        SMTP_HOST = "email-smtp.eu-west-1.amazonaws.com"
         SMTP_PORT = "587"
         SMTP_USERNAME = credentials('big-data-for-tourism-test-smtp-username')
         SMTP_PASSWORD = credentials('big-data-for-tourism-test-smtp-password')
         MAIL_SUBJECT = "Congratulations! Your data has been stored"
         MAIL_FROM_NAME = "Tourism Data Collector"
-        MAIL_FROM_ADDRESS = "bdt@idm-suedtirol.com"
+        MAIL_FROM_ADDRESS = "info@davinci.bz.it"
     }
 
     stages {
