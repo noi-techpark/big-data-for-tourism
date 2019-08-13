@@ -19,7 +19,7 @@ pipeline {
         ES_USER = credentials('big-data-for-tourism-test-es-username-password')
         ES_USERDETAILS = "index-userdetails"
 
-        DB_URL = "jdbc:sqlite:/var/bigdata4tourism/tourism-collector.db"
+        DB_URL = "jdbc:sqlite:/var/data/bigdata4tourism/tourism-collector.db"
         DB_USERNAME = ""
         DB_PASSWORD = ""
 
