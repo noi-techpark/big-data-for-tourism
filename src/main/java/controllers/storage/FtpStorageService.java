@@ -165,7 +165,6 @@ public class FtpStorageService implements StorageService {
 
                     Map<String, String> file = new HashMap<>();
                     file.put("filename", f.getName().getBaseName());
-                    file.put("filenameShorten", (f.getName().getBaseName().length() > 20 ? f.getName().getBaseName().substring(0, 20) + "..." : f.getName().getBaseName()));
                     file.put("firstDate", "N/A"); // @deprecated
                     file.put("lastDate", "N/A"); // @deprecated
                     file.put("uploadedDate", new SimpleDateFormat("yyyy-MM-dd").format(f.getContent().getLastModifiedTime()));
@@ -233,7 +232,6 @@ public class FtpStorageService implements StorageService {
 
                     Map<String, String> file = new HashMap<>();
                     file.put("filename", f.getName().getBaseName());
-                    file.put("filenameShorten", (f.getName().getBaseName().length() > 20 ? f.getName().getBaseName().substring(0, 20) + "..." : f.getName().getBaseName()));
                     file.put("firstDate", "N/A"); // @deprecated
                     file.put("lastDate", "N/A"); // @deprecated
                     file.put("uploadedDate", new SimpleDateFormat("yyyy-MM-dd").format(f.getContent().getLastModifiedTime()));
