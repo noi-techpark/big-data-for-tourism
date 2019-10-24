@@ -92,23 +92,6 @@ public class FtpStorageService implements StorageService {
         } catch (FileSystemException e) {
             throw new StorageException("Failed to store file", e);
         }
-
-        try { // wait for report file :/
-            while (true) {
-                java.lang.Thread.sleep(2000);
-
-                String fileName = startPath + location + "/" + destination.getName().getBaseName();
-                fileName = fileName.replace("/new/", "/processed/new/");
-                fileName = fileName.replace(".csv", ".report");
-
-                FileObject reportFile = fsManager.resolveFile(fileName, opts);
-                if (reportFile.exists()) {
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            throw new StorageException("Failed to wait for report file", e);
-        }
     }
 
     @Override

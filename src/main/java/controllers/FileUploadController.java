@@ -351,11 +351,10 @@ public class FileUploadController {
 
         String username = ((User) principal).getUsername();
 
-        int errors = 0;
         storageService.store(file, "/new/" + username);
 
         String result;
-        result = "<h1>Congratulations! Your data has been stored</h1>";
+        result = "<h1>Congratulations! Your data gets processed</h1>";
         result += "<div>";
         result += "Now you can sit back and enjoy a coffee.";
         result += "</div>";
@@ -364,22 +363,18 @@ public class FileUploadController {
         ObjectNode objectNode = mapper.createObjectNode();
         objectNode.put("message", result);
 
-        Map<String, String> f = storageService.loadSingleFile("/processed/new/" + username + "/" + file.getOriginalFilename());
-
-        String append = "";
-        if (!f.get("notValidRows").equals("0")) {
-            append += "<span class=\"stats\">(<span>" + f.get("notValidRows") + "</span>/<span>" + f.get("totalRows") + "</span>)</span>";
-            append += " <a class=\"info-link\" target=\"_blank\" href=\"/report/" + f.get("filenameReport") + "\"><i class=\"material-icons\">info</i></a>";
-        }
+        String pattern = "yyyy-MM-dd";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        String formattedDate = simpleDateFormat.format(new Date());
 
         objectNode.put("row", "<tr>" +
-                "<td width=\"25%\">" + f.get("filenameShorten") + "</td>" +
-                "<td width=\"25%\" align=\"center\">" + f.get("uploadedDate") + "</td>" +
+                "<td width=\"25%\">" + file.getOriginalFilename() + "</td>" +
+                "<td width=\"25%\" align=\"center\">" + formattedDate + "</td>" +
                 "<td width=\"25%\" align=\"center\">" +
-                    "<i class=\"material-icons " + f.get("status") + "\">" + f.get("status") + "</i> " + append +
+                    "<i class=\"material-icons cached\">cached</i> " +
                 "</td>" +
-                "<td width=\"25%\" align=\"center\"><a href=\"/del/" + f.get("filename") + "\" onclick=\"return confirm('Are you sure to delete this set?')\">Delete set</a></td>" +
-                "</tr>");
+                "<td width=\"25%\" align=\"center\"><a href=\"javascript:void(0)\" onclick=\"window.location.reload()\">Refresh page</a></td>" +
+        "</tr>");
 
         return objectNode.toString();
     }
