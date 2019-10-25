@@ -92,23 +92,6 @@ public class FtpStorageService implements StorageService {
         } catch (FileSystemException e) {
             throw new StorageException("Failed to store file", e);
         }
-
-        try { // wait for report file :/
-            while (true) {
-                java.lang.Thread.sleep(2000);
-
-                String fileName = startPath + location + "/" + destination.getName().getBaseName();
-                fileName = fileName.replace("/new/", "/processed/new/");
-                fileName = fileName.replace(".csv", ".report");
-
-                FileObject reportFile = fsManager.resolveFile(fileName, opts);
-                if (reportFile.exists()) {
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            throw new StorageException("Failed to wait for report file", e);
-        }
     }
 
     @Override
@@ -182,7 +165,6 @@ public class FtpStorageService implements StorageService {
 
                     Map<String, String> file = new HashMap<>();
                     file.put("filename", f.getName().getBaseName());
-                    file.put("filenameShorten", (f.getName().getBaseName().length() > 20 ? f.getName().getBaseName().substring(0, 20) + "..." : f.getName().getBaseName()));
                     file.put("firstDate", "N/A"); // @deprecated
                     file.put("lastDate", "N/A"); // @deprecated
                     file.put("uploadedDate", new SimpleDateFormat("yyyy-MM-dd").format(f.getContent().getLastModifiedTime()));
@@ -250,7 +232,6 @@ public class FtpStorageService implements StorageService {
 
                     Map<String, String> file = new HashMap<>();
                     file.put("filename", f.getName().getBaseName());
-                    file.put("filenameShorten", (f.getName().getBaseName().length() > 20 ? f.getName().getBaseName().substring(0, 20) + "..." : f.getName().getBaseName()));
                     file.put("firstDate", "N/A"); // @deprecated
                     file.put("lastDate", "N/A"); // @deprecated
                     file.put("uploadedDate", new SimpleDateFormat("yyyy-MM-dd").format(f.getContent().getLastModifiedTime()));
