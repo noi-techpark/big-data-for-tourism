@@ -1,5 +1,7 @@
 # Tourism data collector
 
+[![ci big-data-for-tourism](https://github.com/noi-techpark/big-data-for-tourism/actions/workflows/ci.yml/badge.svg)](https://github.com/noi-techpark/big-data-for-tourism/actions/workflows/ci.yml)
+
 An Elasticsearch CSV importer written in Java 1.8 using Maven for the build.
 
 ## Features
