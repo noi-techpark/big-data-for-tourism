@@ -2,8 +2,8 @@ name: ci big-data-for-tourism
 
 on:
   push:
-    branches-ignore: [ dev, master ]
-    paths:
+    branches: [ dev, master ]
+    paths-ignore:
       - "README.md"
 
   pull_request:
