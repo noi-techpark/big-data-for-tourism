@@ -1,7 +1,7 @@
 # Tourism data collector
 A CSV file manager written in Java 1.8 using Maven for the build.
 
-[![ci big-data-for-tourism](https://github.com/noi-techpark/big-data-for-tourism/actions/workflows/ci.yml/badge.svg)](https://github.com/noi-techpark/big-data-for-tourism/actions/workflows/ci.yml)
+[![CI](https://github.com/noi-techpark/big-data-for-tourism/actions/workflows/ci.yml/badge.svg)](https://github.com/noi-techpark/big-data-for-tourism/actions/workflows/ci.yml)
 
 ## Features
 
