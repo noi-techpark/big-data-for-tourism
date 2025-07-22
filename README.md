@@ -27,7 +27,7 @@ Imagine we have list of enquiries/bookings in a CSV file with following columns:
 
 ## Setting up the application
 
-Download and unzip the latest [Tourism data collector](https://github.com/idm-suedtirol/big-data-for-tourism/archive/master.zip) release.
+Download and unzip the latest [Tourism data collector](https://github.com/noi-techpark/big-data-for-tourism/archive/master.zip) release.
 
 Install [Maven](http://maven.apache.org/download.cgi) and add the _bin_ folder to your path.
 
